@@ -246,9 +246,22 @@ def supplier_auth():
         company = data.get('company_name')
         password = data.get('password')
         
-        if Supplier.query.filter_by(email=email).first():
-            return jsonify({"error": "Email already exists in network."}), 400
+        existing_supplier = Supplier.query.filter_by(email=email).first()
+        
+        if existing_supplier:
+            if existing_supplier.is_verified:
+                return jsonify({"error": "Email already exists in network."}), 400
+            else:
+                # THE FIX: Recycle unverified supplier account
+                otp_code = str(random.randint(100000, 999999))
+                existing_supplier.password_hash = generate_password_hash(password)
+                existing_supplier.company_name = company
+                existing_supplier.verification_code = otp_code
+                db.session.commit()
+                send_otp_email(email, otp_code)
+                return jsonify({"message": "Verification email re-dispatched.", "status": "pending_verification"})
             
+        # Normal creation for brand new emails
         otp_code = str(random.randint(100000, 999999))
         hashed_pw = generate_password_hash(password)
         new_supplier = Supplier(
@@ -336,9 +349,23 @@ def client_auth():
         company = data.get('company_name')
         password = data.get('password')
         
-        if Client.query.filter_by(email=email).first():
-            return jsonify({"error": "Email already registered."}), 400
+        existing_client = Client.query.filter_by(email=email).first()
+        
+        if existing_client:
+            if existing_client.is_verified:
+                # Account exists and is fully active. Block them.
+                return jsonify({"error": "Email already registered."}), 400
+            else:
+                # THE FIX: Account is stuck in limbo! Generate a new OTP and recycle it.
+                otp_code = str(random.randint(100000, 999999))
+                existing_client.password_hash = generate_password_hash(password)
+                existing_client.company_name = company
+                existing_client.verification_code = otp_code
+                db.session.commit()
+                send_otp_email(email, otp_code)
+                return jsonify({"message": "Verification email re-dispatched.", "status": "pending_verification"})
             
+        # Normal creation for brand new emails
         otp_code = str(random.randint(100000, 999999))
         hashed_pw = generate_password_hash(password)
         new_client = Client(
