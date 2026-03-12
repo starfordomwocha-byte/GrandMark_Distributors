@@ -218,6 +218,16 @@ def services():
 def about(): 
     return render_template('about.html')
 
+@app.route('/secret-seed-database-123')
+def secret_seed():
+    try:
+        import os
+        # This tells the server to run your seed file in the background
+        os.system("python seed.py")
+        return "<h1>✅ Database Seeded Successfully!</h1><p>Go check your catalog.</p>"
+    except Exception as e:
+        return f"<h1>❌ Error:</h1><p>{e}</p>"
+
 # --- SUPPLIER PORTAL ROUTING ---
 @app.route('/supplier_portal')
 def supplier_portal():
