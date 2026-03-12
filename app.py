@@ -246,20 +246,34 @@ def supplier_auth():
         company = data.get('company_name')
         password = data.get('password')
         
-        existing_supplier = Supplier.query.filter_by(email=email).first()
+        if Supplier.query.filter_by(email=email).first():
+            return jsonify({"error": "Email already exists in network."}), 400
+            
+        hashed_pw = generate_password_hash(password)
+        new_supplier = Supplier(
+            company_name=company, 
+            email=email, 
+            password_hash=hashed_pw,
+            is_verified=True, # <--- INSTANTLY VERIFIED
+            verification_code=None
+        )
+        db.session.add(new_supplier)
+        db.session.commit()
         
-        if existing_supplier:
-            if existing_supplier.is_verified:
-                return jsonify({"error": "Email already exists in network."}), 400
-            else:
-                # THE FIX: Recycle unverified supplier account
-                otp_code = str(random.randint(100000, 999999))
-                existing_supplier.password_hash = generate_password_hash(password)
-                existing_supplier.company_name = company
-                existing_supplier.verification_code = otp_code
-                db.session.commit()
-                send_otp_email(email, otp_code)
-                return jsonify({"message": "Verification email re-dispatched.", "status": "pending_verification"})
+        return jsonify({"message": "Registration successful! You can now log in.", "status": "success"})
+
+    elif action == 'login':
+        password = data.get('password')
+        user = Supplier.query.filter_by(email=email).first()
+        
+        if user and check_password_hash(user.password_hash, password):
+            session['supplier_logged_in'] = True
+            session['supplier_id'] = user.id
+            session['supplier_email'] = user.email
+            session['supplier_company'] = user.company_name
+            return jsonify({"message": "Login successful!"})
+            
+        return jsonify({"error": "Invalid credentials."}), 401
             
         # Normal creation for brand new emails
         otp_code = str(random.randint(100000, 999999))
@@ -349,21 +363,34 @@ def client_auth():
         company = data.get('company_name')
         password = data.get('password')
         
-        existing_client = Client.query.filter_by(email=email).first()
+        if Client.query.filter_by(email=email).first():
+            return jsonify({"error": "Email already registered."}), 400
+            
+        hashed_pw = generate_password_hash(password)
+        new_client = Client(
+            company_name=company, 
+            email=email, 
+            password_hash=hashed_pw,
+            is_verified=True, # <--- INSTANTLY VERIFIED
+            verification_code=None
+        )
+        db.session.add(new_client)
+        db.session.commit()
         
-        if existing_client:
-            if existing_client.is_verified:
-                # Account exists and is fully active. Block them.
-                return jsonify({"error": "Email already registered."}), 400
-            else:
-                # THE FIX: Account is stuck in limbo! Generate a new OTP and recycle it.
-                otp_code = str(random.randint(100000, 999999))
-                existing_client.password_hash = generate_password_hash(password)
-                existing_client.company_name = company
-                existing_client.verification_code = otp_code
-                db.session.commit()
-                send_otp_email(email, otp_code)
-                return jsonify({"message": "Verification email re-dispatched.", "status": "pending_verification"})
+        return jsonify({"message": "Registration successful! You can now log in.", "status": "success"})
+
+    elif action == 'login':
+        password = data.get('password')
+        user = Client.query.filter_by(email=email).first()
+        
+        if user and check_password_hash(user.password_hash, password):
+            # We removed the 'is_verified' check here because everyone is verified instantly
+            session['client_logged_in'] = True
+            session['client_id'] = user.id
+            session['client_email'] = user.email 
+            return jsonify({"message": "Login successful!"})
+            
+        return jsonify({"error": "Invalid credentials."}), 401
             
         # Normal creation for brand new emails
         otp_code = str(random.randint(100000, 999999))
