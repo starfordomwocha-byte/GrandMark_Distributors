@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Corporate Profile | GrandMark{% endblock %}
+
+{% block content %}
+<style>
+    .about-header { text-align: center; padding: 6rem 1rem 2rem 1rem; }
+    .about-header h1 { font-size: 4.5rem; font-weight: 900; color: var(--text-color); margin-bottom: 1rem; letter-spacing: -2px; }
+    .about-header p { color: #94a3b8; font-size: 1.25rem; max-width: 700px; margin: 0 auto; line-height: 1.6; }
+
+    .about-wrapper { max-width: 1200px; margin: 0 auto; padding: 0 2rem 6rem 2rem; }
+
+    /* The Corporate Scale Metrics */
+    .metrics-grid {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 3rem; margin-bottom: 6rem;
+    }
+    .metric-box {
+        background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px;
+        padding: 2.5rem 1.5rem; text-align: center; transition: transform 0.3s;
+    }
+    .metric-box:hover { transform: translateY(-5px); border-color: var(--accent-color); }
+    .m-val { font-size: 3.5rem; font-weight: 900; color: var(--accent-color); font-family: 'Plus Jakarta Sans', sans-serif; margin-bottom: 5px; }
+    .m-lbl { font-size: 0.9rem; color: #94a3b8; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+
+    /* The Corporate Story Split */
+    .story-section {
+        display: flex; gap: 5rem; margin-bottom: 7rem; align-items: center;
+    }
+    .story-content { flex: 1.2; }
+    .story-content h2 { font-size: 2.8rem; font-weight: 900; color: #fff; margin-bottom: 1.5rem; line-height: 1.1; }
+    .story-content p { color: #cbd5e1; font-size: 1.15rem; line-height: 1.8; margin-bottom: 1.5rem; }
+    
+    .story-stats { flex: 0.8; display: flex; flex-direction: column; gap: 1.5rem; }
+    .stat-card { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); padding: 2rem; border-radius: 16px; border-left: 4px solid var(--accent-color); }
+    .stat-card h4 { margin: 0 0 10px 0; color: #fff; font-size: 1.4rem; font-weight: 800; }
+    .stat-card p { margin: 0; color: #94a3b8; font-size: 1.05rem; line-height: 1.5; }
+
+    /* Corporate History Timeline */
+    .timeline-container { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 30px; padding: 5rem 4rem; margin-bottom: 5rem; }
+    .timeline-header { text-align: center; margin-bottom: 4rem; }
+    .timeline-header h2 { font-size: 2.5rem; font-weight: 900; color: #fff; }
+    
+    .timeline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; position: relative; }
+    .timeline-grid::before { content: ''; position: absolute; top: 25px; left: 0; width: 100%; height: 2px; background: rgba(56, 189, 248, 0.2); z-index: 0; }
+    
+    .t-node { position: relative; z-index: 1; padding: 0 10px; }
+    .t-dot { width: 20px; height: 20px; background: var(--bg-color); border: 5px solid var(--accent-color); border-radius: 50%; margin: 15px auto 1.5rem auto; box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+    .t-node h4 { color: #fff; font-size: 1.3rem; margin: 0 0 10px 0; text-align: center; font-weight: 800; }
+    .t-node span { display: block; text-align: center; color: var(--accent-color); font-family: monospace; font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; }
+    .t-node p { text-align: center; color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin: 0; }
+
+    /* Executive Leadership / Values */
+    .values-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem; }
+    
+    /* --- NEW: THE ZOOM HOVER PHYSICS --- */
+    .value-box { 
+        text-align: center; 
+        padding: 3rem 2rem; 
+        background: rgba(0,0,0,0.2); 
+        border-radius: 20px; 
+        border: 1px solid rgba(255,255,255,0.02);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Silky smooth curve */
+        cursor: default;
+    }
+    
+    .value-box:hover {
+        transform: scale(1.05) translateY(-8px); /* The Zoom and Lift */
+        background: rgba(30, 41, 59, 0.6); 
+        border-color: rgba(56, 189, 248, 0.4);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 25px rgba(56, 189, 248, 0.1);
+        z-index: 10;
+    }
+    
+    .value-box h3 { 
+        font-size: 1.5rem; 
+        color: #fff; 
+        margin-bottom: 15px; 
+        transition: color 0.3s ease; 
+    }
+    
+    .value-box:hover h3 {
+        color: var(--accent-color); /* Title glows blue on hover */
+    }
+    
+    .value-box p { color: #94a3b8; line-height: 1.6; }
+
+    @media (max-width: 1000px) {
+        .metrics-grid { grid-template-columns: 1fr 1fr; }
+        .story-section { flex-direction: column; }
+        .timeline-grid { grid-template-columns: 1fr 1fr; gap: 4rem 2rem; }
+        .timeline-grid::before { display: none; }
+        .values-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="about-header" data-aos="zoom-in">
+    <h1>Forging the Future of Trade.</h1>
+    <p>GrandMark Logistics is the premier heavy-duty supply chain conglomerate in East Africa, moving the physical commerce that powers the continent.</p>
+</div>
+
+<div class="about-wrapper">
+    
+    <div class="metrics-grid">
+        <div class="metric-box" data-aos="fade-up" data-aos-delay="0">
+            <div class="m-val">1200+</div><div class="m-lbl">Active Fleet Vehicles</div>
+        </div>
+        <div class="metric-box" data-aos="fade-up" data-aos-delay="100">
+            <div class="m-val">4.5M</div><div class="m-lbl">Sq.Ft Warehouse Space</div>
+        </div>
+        <div class="metric-box" data-aos="fade-up" data-aos-delay="200">
+            <div class="m-val">48</div><div class="m-lbl">Global Port Alliances</div>
+        </div>
+        <div class="metric-box" data-aos="fade-up" data-aos-delay="300">
+            <div class="m-val">15</div><div class="m-lbl">Regional Mega-Hubs</div>
+        </div>
+    </div>
+
+    <div class="story-section">
+        <div class="story-content" data-aos="fade-right">
+            <h2>From a single warehouse to a continental empire.</h2>
+            <p>GrandMark Distributors was founded on a simple premise: East Africa's rapidly expanding markets required a logistics partner capable of handling immense volume without sacrificing operational integrity. We started as a specialized procurement firm in Nairobi, dealing directly with international manufacturers to source wholesale goods.</p>
+            <p>Today, GrandMark commands one of the most sophisticated physical supply chains on the continent. We own and operate dedicated ocean freight lanes, thousands of miles of trucking routes, and massive climate-controlled fulfillment centers. We don't rely on third-party brokers; we control the entire lifecycle of the cargo from the factory floor to the final retail destination.</p>
+        </div>
+        <div class="story-stats" data-aos="fade-left">
+            <div class="stat-card">
+                <h4>Our Mission</h4>
+                <p>To provide unbreakable, end-to-end supply chain infrastructure that allows African businesses to scale globally with zero logistical friction.</p>
+            </div>
+            <div class="stat-card">
+                <h4>Our Vision</h4>
+                <p>To serve as the undisputed circulatory system for East African commerce, delivering goods faster, safer, and more transparently than any competitor.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="timeline-container" data-aos="fade-up">
+        <div class="timeline-header">
+            <h2>Our Journey of Expansion</h2>
+        </div>
+        <div class="timeline-grid">
+            <div class="t-node">
+                <div class="t-dot"></div>
+                <span>2015</span>
+                <h4>The Foundation</h4>
+                <p>GrandMark opens its first 50,000 sq.ft warehousing facility in Nairobi, focusing on B2B procurement for local electronics retailers.</p>
+            </div>
+            <div class="t-node">
+                <div class="t-dot"></div>
+                <span>2018</span>
+                <h4>Mombasa Port Integration</h4>
+                <p>Acquired direct freight forwarding licenses, establishing our massive ocean-freight clearing hub at the Port of Mombasa.</p>
+            </div>
+            <div class="t-node">
+                <div class="t-dot"></div>
+                <span>2022</span>
+                <h4>The Heavy Fleet</h4>
+                <p>Launched a fleet of 500+ GPS-tracked commercial haulers, expanding our distribution network into Uganda and Rwanda.</p>
+            </div>
+            <div class="t-node">
+                <div class="t-dot"></div>
+                <span>2026 & BEYOND</span>
+                <h4>Pan-African Dominance</h4>
+                <p>Deploying automated robotics in our mega-hubs and establishing direct air-cargo charter lanes across the entire continent.</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 3rem;" data-aos="fade-up">
+        <h2 style="font-size: 2.5rem; font-weight: 900; color: #fff;">Our Core Values</h2>
+    </div>
+    <div class="values-grid">
+        <div class="value-box" data-aos="fade-up" data-aos-delay="100">
+            <h3>Absolute Reliability</h3>
+            <p>When we commit to a transit timeline, we meet it. Our redundancies ensure that weather, borders, and port delays never stop the movement of goods.</p>
+        </div>
+        <div class="value-box" data-aos="fade-up" data-aos-delay="200">
+            <h3>Operational Scale</h3>
+            <p>Whether you need to move a single pallet of pharmaceuticals or charter an entire cargo ship of industrial steel, we have the physical infrastructure to handle it.</p>
+        </div>
+        <div class="value-box" data-aos="fade-up" data-aos-delay="300">
+            <h3>Uncompromising Safety</h3>
+            <p>From hazardous materials containment to 24/7 armed escort for high-value cargo, the security of our clients' physical assets is our highest priority.</p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+{% block title %}Executive Console | GrandMark{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    .admin-wrapper { max-width: 1400px; margin: 2rem auto 6rem auto; padding: 0 2rem; }
+    
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+    .admin-header h1 { font-size: 2.5rem; font-weight: 900; color: #fff; margin: 0; }
+    
+    .btn-export { background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color); padding: 10px 20px; border-radius: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s; text-decoration: none; display: inline-block; }
+    .btn-export:hover { background: var(--accent-color); color: #000; box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+    .kpi-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 2rem; position: relative; overflow: hidden; }
+    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent-color); }
+    .kpi-card.green::before { background: #34d399; }
+    .kpi-card.red::before { background: #f87171; }
+    
+    .kpi-title { color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 10px; }
+    .kpi-value { font-size: 2.5rem; font-weight: 900; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; }
+    
+    .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+    
+    .panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; }
+    .panel h2 { font-size: 1.5rem; color: #fff; margin: 0 0 1.5rem 0; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+
+    .table-container { max-height: 400px; overflow-y: auto; padding-right: 10px; }
+    .table-container::-webkit-scrollbar { width: 6px; }
+    .table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+    .table-container::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.3); border-radius: 4px; }
+
+    .admin-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .admin-table th { background: rgba(0,0,0,0.4); color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; padding: 12px 15px; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
+    .admin-table td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.95rem; }
+    
+    .status-tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+    .tag-green { background: rgba(52, 211, 153, 0.1); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.2); }
+    .tag-red { background: rgba(248, 113, 113, 0.1); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); }
+
+    .admin-form { display: flex; gap: 10px; margin-bottom: 20px; }
+    .admin-input { flex: 1; padding: 12px 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 0.95rem; }
+    .admin-input:focus { outline: none; border-color: var(--accent-color); }
+    .btn-submit { background: var(--accent-color); color: #000; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+    .btn-submit:hover { box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); transform: translateY(-2px); }
+    
+    /* --- FIXED: RESPONSIVE SYSTEM OPERATIONS TIER --- */
+    .ops-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+    .ops-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+
+    /* Forces panels to stack cleanly on laptops to prevent overlap */
+    @media (max-width: 1300px) { 
+        .ops-grid { grid-template-columns: 1fr; } 
+    }
+    
+    @media (max-width: 1000px) { 
+        .dashboard-grid { grid-template-columns: 1fr; } 
+        .admin-form { flex-direction: column; } 
+    }
+</style>
+
+<div class="admin-wrapper" data-aos="fade-in">
+    
+    <div class="admin-header">
+        <h1>Executive Console</h1>
+        <div>
+            <a href="/api/financial_report" class="btn-export" style="margin-right: 10px;">Download Audit PDF</a>
+            <a href="/export/inventory" class="btn-export">Export CSV</a>
+        </div>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-title">Gross Revenue (CR)</div>
+            <div class="kpi-value" style="color: #34d399;">KES {{ "{:,.2f}".format(total_revenue) }}</div>
+        </div>
+        <div class="kpi-card red">
+            <div class="kpi-title">Operating Expenses (DR)</div>
+            <div class="kpi-value" style="color: #f87171;">KES {{ "{:,.2f}".format(total_expenses) }}</div>
+        </div>
+        <div class="kpi-card {% if current_balance >= 0 %}green{% else %}red{% endif %}">
+            <div class="kpi-title">Net Cashbook Balance</div>
+            <div class="kpi-value">KES {{ "{:,.2f}".format(current_balance) }}</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="left-col" style="display: flex; flex-direction: column; gap: 2rem;">
+            
+            <div class="panel">
+                <h2>Double-Entry Ledger</h2>
+                <form id="addRevenueForm" class="admin-form">
+                    <select id="revType" class="admin-input" style="flex: 0.5;">
+                        <option value="Credit">Cash In (Revenue)</option>
+                        <option value="Debit">Cash Out (Expense)</option>
+                    </select>
+                    <input type="number" step="0.01" id="revAmount" placeholder="Amount (KES)" required class="admin-input" style="flex: 0.8;">
+                    <input type="text" id="revDesc" placeholder="Transaction Details" required class="admin-input" style="flex: 2;">
+                    <button type="submit" class="btn-submit">Log Entry</button>
+                </form>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Details</th>
+                                <th style="text-align: right;">Amount (KES)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for l in ledger %}
+                            <tr>
+                                <td style="font-family: monospace; color: #64748b;">{{ l.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    {% if l.transaction_type == 'Credit' %}
+                                        <span class="status-tag tag-green">Credit</span>
+                                    {% else %}
+                                        <span class="status-tag tag-red">Debit</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ l.description }}</td>
+                                <td style="text-align: right; font-weight: bold; font-family: monospace; color: {% if l.transaction_type == 'Credit' %}#34d399{% else %}#f87171{% endif %};">
+                                    {{ "{:,.2f}".format(l.amount) }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Pipeline Authorizations</h2>
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Entity</th>
+                                <th>Request Details</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inq in inquiries %}
+                            <tr>
+                                <td><strong>{{ inq.company_name }}</strong><br><span style="font-size:0.8rem; color:#64748b;">{{ inq.contact_email }}</span></td>
+                                <td style="max-width: 300px; white-space: pre-wrap; font-size: 0.85rem;">{{ inq.message }}</td>
+                                <td>
+                                    {% if 'Paid' in inq.status %}
+                                        <span class="status-tag tag-green">{{ inq.status }}</span>
+                                    {% elif 'Rejected' in inq.status %}
+                                        <span class="status-tag tag-red">{{ inq.status }}</span>
+                                    {% else %}
+                                        <span class="status-tag" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">{{ inq.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if 'Pending' in inq.status or 'Paid' in inq.status %}
+                                    <button onclick="approveOrder({{ inq.id }})" class="btn-submit" style="padding: 6px 12px; font-size: 0.8rem;">Process</button>
+                                    <button onclick="rejectOrder({{ inq.id }})" class="btn-export" style="padding: 5px 10px; font-size: 0.8rem; color: #f87171; border-color: #f87171;">Reject</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-col" style="display: flex; flex-direction: column; gap: 2rem;">
+            
+            <div class="panel">
+                <h2>Asset Distribution</h2>
+                <div style="height: 300px; width: 100%; margin-top: 1rem;">
+                    <canvas id="inventoryChart"></canvas>
+                </div>
+            </div>
+
+            <div class="panel" style="border-color: rgba(248, 113, 113, 0.3);">
+                <h2>System Alerts <span class="status-tag tag-red" style="margin-left:auto; animation: pulse 2s infinite;">{{ low_stock_products|length }} Critical</span></h2>
+                <div class="table-container" style="max-height: 250px;">
+                    <table class="admin-table">
+                        <tbody>
+                            {% for p in low_stock_products %}
+                            <tr>
+                                <td><strong>{{ p.name }}</strong><br><span style="font-family: monospace; font-size: 0.8rem; color: #64748b;">{{ p.sku }}</span></td>
+                                <td style="text-align: right;"><span class="status-tag tag-red">{{ p.stock_quantity }} Left</span></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="2" style="text-align:center; color:#34d399;">All inventory levels healthy.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid" style="margin-bottom: 2rem;">
+        
+        <div class="panel">
+            <h2>Warehouse Inventory Master</h2>
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Item Details</th>
+                            <th>Cost (KES)</th>
+                            <th>Vol</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in products %}
+                        <tr>
+                            <td style="font-family: monospace; color: var(--accent-color); font-weight: bold;">{{ p.sku }}</td>
+                            <td><strong>{{ p.name }}</strong><br><span style="font-size: 0.8rem; color: #64748b;">{{ p.category }}</span></td>
+                            <td style="font-family: monospace;">{{ "{:,.2f}".format(p.unit_cost) }}</td>
+                            <td>
+                                {% if p.stock_quantity < 25 %}
+                                    <span class="status-tag tag-red">{{ p.stock_quantity }}</span>
+                                {% else %}
+                                    <span class="status-tag tag-green">{{ p.stock_quantity }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button onclick="deleteProduct({{ p.id }})" class="btn-export" style="padding: 4px 10px; font-size: 0.7rem; color: #f87171; border-color: #f87171;">Purge</button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">No inventory data found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Authorized Supply Nodes</h2>
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Company Identity</th>
+                            <th>Role / Designation</th>
+                            <th>Industry Segment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in companies %}
+                        <tr>
+                            <td><strong>{{ c.name }}</strong></td>
+                            <td><span class="status-tag tag-green">{{ c.role }}</span></td>
+                            <td style="color: #94a3b8;">{{ c.industry }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" style="text-align: center; color: #64748b; padding: 20px;">No network nodes registered.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    </div>
+    <div class="ops-grid">
+        
+        <div class="panel">
+            <h2><span style="margin-right: 10px;">📦</span> Add Stock</h2>
+            <form id="addProductForm">
+                <div class="ops-form-grid">
+                    <input type="text" id="prodName" class="admin-input" placeholder="Product Name" required>
+                    <input type="text" id="prodSKU" class="admin-input" placeholder="SKU (e.g., FMCG-123)" required>
+                    <input type="text" id="prodCategory" class="admin-input" placeholder="Category" required>
+                    <input type="number" step="0.01" id="prodCost" class="admin-input" placeholder="Cost (KES)" required>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="prodQty" class="admin-input" placeholder="Initial Volume" required style="flex: 1;">
+                    <button type="submit" class="btn-submit" style="flex: 1;">Inject Inventory</button>
+                </div>
+            </form>
+            <p style="color: #64748b; font-size: 0.85rem; margin-top: 15px; margin-bottom: 0;">* Automatically debits cashbook & generates QR codes.</p>
+        </div>
+
+        <div class="panel" style="border-color: rgba(56, 189, 248, 0.3);">
+            <h2><span style="margin-right: 10px;">🌐</span> Add Network Node</h2>
+            <form id="addNetworkForm">
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="netCompany" class="admin-input" placeholder="Supplier Company Name" required>
+                    <input type="email" id="netEmail" class="admin-input" placeholder="Supplier Contact Email" required>
+                    <input type="text" id="netPassword" class="admin-input" placeholder="Provision Temporary Password" required>
+                </div>
+                <button type="submit" class="btn-submit" style="width: 100%; background: linear-gradient(135deg, #38bdf8, #818cf8); border: none;">Provision Supplier Account</button>
+            </form>
+            <p style="color: #64748b; font-size: 0.85rem; margin-top: 15px; margin-bottom: 0;">* Grants entity direct B2B restock access via Supplier Portal.</p>
+        </div>
+
+        <div class="panel" style="border-color: rgba(167, 139, 250, 0.3);">
+            <h2><span style="margin-right: 10px;">🛡️</span> Security Ops</h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #cbd5e1; font-weight: bold; font-size: 0.95rem;">Auth Protocol</span>
+                    <span class="status-tag tag-green">Google TOTP Enabled</span>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <span style="color: #cbd5e1; font-weight: bold; font-size: 0.95rem; display: block; margin-bottom: 10px;">IDS: Blacklisted Threats</span>
+                    <div class="table-container" style="max-height: 120px;">
+                        <table class="admin-table">
+                            <tbody>
+                                {% for ip in blacklisted_ips %}
+                                <tr>
+                                    <td style="font-family: monospace; color: #f87171;">{{ ip.ip_address }}</td>
+                                    <td style="color: #94a3b8; font-size: 0.85rem;">{{ ip.reason }}</td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="2" style="text-align:center; color:#34d399; padding: 5px;">No active threats detected.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // --- MANUAL LEDGER ENTRY ---
+    document.getElementById('addRevenueForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button');
+        btn.innerText = "Processing...";
+        
+        fetch('/api/add_revenue', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ 
+                type: document.getElementById('revType').value,
+                amount: document.getElementById('revAmount').value, 
+                description: document.getElementById('revDesc').value 
+            }) 
+        })
+        .then(res => res.json())
+        .then(() => location.reload());
+    });
+
+    // --- ADD INVENTORY LOGIC ---
+    document.getElementById('addProductForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button');
+        btn.innerText = "Injecting...";
+
+        fetch('/api/add_product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: document.getElementById('prodName').value,
+                sku: document.getElementById('prodSKU').value,
+                category: document.getElementById('prodCategory').value,
+                unit_cost: document.getElementById('prodCost').value,
+                stock_quantity: document.getElementById('prodQty').value
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        });
+    });
+
+    // --- ADD NETWORK LOGIC ---
+    document.getElementById('addNetworkForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button');
+        btn.innerText = "Provisioning...";
+
+        fetch('/supplier/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'register',
+                company_name: document.getElementById('netCompany').value,
+                email: document.getElementById('netEmail').value,
+                password: document.getElementById('netPassword').value
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) {
+                alert(data.error);
+                btn.innerText = "Provision Supplier Account";
+            } else {
+                alert("Network Node Successfully Provisioned!");
+                document.getElementById('addNetworkForm').reset();
+                btn.innerText = "Provision Supplier Account";
+            }
+        });
+    });
+
+    // --- PIPELINE ACTIONS ---
+    function approveOrder(id) {
+        fetch(`/api/approve_inquiry/${id}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => { alert(data.message); location.reload(); });
+    }
+
+    function rejectOrder(id) {
+        fetch(`/api/delete_inquiry/${id}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => { location.reload(); });
+    }
+
+    // --- PURGE INVENTORY LOGIC ---
+    function deleteProduct(id) {
+        if(confirm("WARNING: Are you sure you want to permanently purge this asset from the database?")) {
+            fetch(`/api/delete_product/${id}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => location.reload());
+        }
+    }
+
+    // --- CHART.JS ---
+    document.addEventListener("DOMContentLoaded", function() {
+        const inventoryData = {{ inventory_value | tojson | safe }};
+        const ctx = document.getElementById('inventoryChart').getContext('2d');
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(inventoryData),
+                datasets: [{
+                    data: Object.values(inventoryData),
+                    backgroundColor: [
+                        'rgba(56, 189, 248, 0.8)',
+                        'rgba(52, 211, 153, 0.8)',
+                        'rgba(167, 139, 250, 0.8)',
+                        'rgba(244, 114, 182, 0.8)',
+                        'rgba(251, 191, 36, 0.8)',
+                        'rgba(248, 113, 113, 0.8)'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#cbd5e1', font: { family: 'Arial', size: 11 } } }
+                },
+                cutout: '75%'
+            }
+        });
+    });
+</script>
+{% endblock %}

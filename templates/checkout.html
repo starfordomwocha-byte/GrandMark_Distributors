@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Checkout | GrandMark{% endblock %}
+
+{% block content %}
+<style>
+    .checkout-wrapper { max-width: 1000px; margin: 4rem auto 8rem auto; padding: 0 2rem; display: flex; gap: 3rem; align-items: flex-start; }
+    
+    .cart-section { flex: 1.5; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 2.5rem; }
+    .form-section { flex: 1; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--accent-color); border-radius: 20px; padding: 2.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: sticky; top: 100px; }
+
+    .section-title { font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+
+    /* Cart Table */
+    .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+    .cart-item:last-child { border-bottom: none; }
+    .item-info h4 { margin: 0 0 5px 0; color: #e2e8f0; font-size: 1.1rem; }
+    .item-info p { margin: 0; color: #64748b; font-size: 0.9rem; font-family: monospace; }
+    .item-math { text-align: right; }
+    .item-math span { display: block; }
+    .i-qty { color: var(--accent-color); font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
+    .i-sub { color: #fff; font-weight: 900; font-size: 1.2rem; font-family: 'Plus Jakarta Sans', sans-serif; }
+    
+    .remove-btn { background: transparent; color: #f87171; border: none; font-size: 0.8rem; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; font-weight: bold; }
+    .remove-btn:hover { text-decoration: underline; }
+
+    .cart-empty { text-align: center; color: #94a3b8; padding: 3rem 0; }
+
+    /* Form Styles */
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label { display: block; color: #cbd5e1; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+    .form-control { width: 100%; padding: 16px 20px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-size: 1rem; box-sizing: border-box; }
+    .form-control:focus { outline: none; border-color: var(--accent-color); }
+
+    .grand-total-box { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 2rem; border: 1px solid rgba(56, 189, 248, 0.2); }
+    .gt-lbl { color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; font-weight: bold; letter-spacing: 2px; display: block; margin-bottom: 5px; }
+    .gt-val { color: var(--accent-color); font-size: 2.5rem; font-weight: 900; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    .btn-submit { background: var(--accent-color); color: #000; padding: 18px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 800; text-transform: uppercase; width: 100%; cursor: pointer; transition: all 0.3s; }
+    .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(56, 189, 248, 0.4); }
+
+    @media (max-width: 900px) { .checkout-wrapper { flex-direction: column; } .form-section { position: relative; top: 0; } }
+</style>
+
+<div class="checkout-wrapper" data-aos="fade-in">
+    <div class="cart-section">
+        <h2 class="section-title">Order Ledger</h2>
+        <div id="cartItemsContainer">
+            </div>
+    </div>
+
+    <div class="form-section">
+        <h2 class="section-title">Authorization</h2>
+        
+        <div class="grand-total-box">
+            <span class="gt-lbl">Total Amount Due</span>
+            <div class="gt-val">KES <span id="displayGrandTotal">0.00</span></div>
+        </div>
+
+        <form id="checkoutForm">
+            <div class="form-group">
+                <label>Company Name</label>
+                <input type="text" id="chkCompany" class="form-control" required placeholder="Authorized Entity Name">
+            </div>
+            <div class="form-group">
+                <label>Billing Email</label>
+                <input type="email" id="chkEmail" class="form-control" required placeholder="billing@company.com">
+            </div>
+            <button type="submit" class="btn-submit" id="submitBtn">Submit Procurement</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 1. Safely load the cart (prevents crash if localStorage is corrupted)
+    let cart = {};
+    try {
+        cart = JSON.parse(localStorage.getItem('grandmark_cart')) || {};
+    } catch(e) {
+        cart = {};
+    }
+    
+    let grandTotal = 0;
+
+    function renderCart() {
+        const container = document.getElementById('cartItemsContainer');
+        const btn = document.getElementById('submitBtn');
+        container.innerHTML = "";
+        grandTotal = 0;
+        let itemCount = 0;
+
+        for (let id in cart) {
+            itemCount++;
+            let item = cart[id];
+            let subTotal = item.qty * item.price;
+            grandTotal += subTotal;
+
+            container.innerHTML += `
+                <div class="cart-item">
+                    <div class="item-info">
+                        <h4>${item.name}</h4>
+                        <p>Unit Cost: KES ${item.price.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                        <button type="button" class="remove-btn" onclick="removeItem('${id}')">Remove</button>
+                    </div>
+                    <div class="item-math">
+                        <span class="i-qty">${item.qty} Units</span>
+                        <span class="i-sub">KES ${subTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 2. Properly enable/disable the submit button
+        if (itemCount === 0) {
+            container.innerHTML = `<div class="cart-empty"><h2>Your ledger is empty.</h2><p>Return to the catalog to add inventory.</p><br><a href="/catalog" style="color:var(--accent-color);">Back to Catalog</a></div>`;
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = "1";
+        }
+
+        document.getElementById('displayGrandTotal').innerText = grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function removeItem(id) {
+        delete cart[id];
+        localStorage.setItem('grandmark_cart', JSON.stringify(cart));
+        renderCart();
+    }
+
+    // 3. Bulletproof Form Submission
+    document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let finalMessage = "BULK WHOLESALE PROCUREMENT:\n\n";
+        for (let id in cart) {
+            finalMessage += `${cart[id].qty} units of ${cart[id].name}.\n`;
+        }
+        finalMessage += `\nTOTAL AMOUNT DUE: KES ${grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+        const btn = document.getElementById('submitBtn');
+        const originalText = btn.innerText;
+        btn.innerText = "Processing...";
+        btn.disabled = true;
+
+        fetch('/api/submit_inquiry', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                company_name: document.getElementById('chkCompany').value,
+                email: document.getElementById('chkEmail').value,
+                type: "Bulk Wholesale Order",
+                message: finalMessage
+            })
+        })
+        .then(res => {
+            // Check if the Python server crashed (500 Error)
+            if (!res.ok) throw new Error("Server Error " + res.status);
+            return res.json();
+        })
+        .then(data => {
+            if(data.error) {
+                alert("Checkout Error: " + data.error);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            } else {
+                alert("Success! Order sent to Executive Dashboard for M-PESA processing.");
+                localStorage.removeItem('grandmark_cart'); // Clear cart
+                window.location.href = "/client_portal"; // Redirect to their secure gateway
+            }
+        })
+        .catch(err => {
+            // THIS is what was missing! If it fails, reset the button and tell the user.
+            console.error("Fetch Error:", err);
+            alert("⚠️ Transmission Failed! Please check your Terminal window to see why the Python server dropped the request.");
+            btn.innerText = originalText;
+            btn.disabled = false;
+        });
+    });
+
+    // Run on load
+    renderCart();
+</script>
+{% endblock %}

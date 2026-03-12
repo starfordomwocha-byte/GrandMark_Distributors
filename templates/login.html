@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Admin Login | GrandMark{% endblock %}
+
+{% block content %}
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 70vh;
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 420px;
+        padding: 3rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border-top: 5px solid var(--accent-color);
+    }
+
+    /* Cool glowing orb effect behind the form */
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        left: -50px;
+        width: 100px;
+        height: 100px;
+        background: var(--accent-color);
+        filter: blur(50px);
+        opacity: 0.3;
+        z-index: -1;
+        transition: background 0.3s;
+    }
+
+    .login-card h2 {
+        margin-top: 0;
+        margin-bottom: 5px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        color: var(--text-color);
+    }
+
+    .login-card p {
+        color: #aaa;
+        margin-bottom: 30px;
+        font-size: 0.95rem;
+    }
+
+    .input-group {
+        margin-bottom: 25px;
+        text-align: left;
+    }
+
+    .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: var(--accent-color);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .input-group input {
+        width: 100%;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--glass-border);
+        color: var(--text-color);
+        border-radius: 8px;
+        font-size: 1.05rem;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+    }
+
+    .input-group input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 15px var(--nav-hover);
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    /* Placeholder text styling */
+    .input-group input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .auth-btn {
+        background: var(--accent-color);
+        color: #000; 
+        width: 100%;
+        padding: 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 900;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+    }
+
+    .auth-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px var(--nav-hover);
+    }
+
+    .error-msg {
+        background: rgba(220, 53, 69, 0.15);
+        color: #ff4d4d;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(220, 53, 69, 0.4);
+        margin-bottom: 25px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+</style>
+
+<div class="login-container" data-aos="zoom-in" data-aos-duration="800">
+    <div class="glass-panel login-card">
+        <svg viewBox="0 0 24 24" style="width: 55px; height: 55px; fill: var(--accent-color); margin-bottom: 15px;">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+        </svg>
+        
+        <h2>SYSTEM COMMAND</h2>
+        <p>Restricted Executive Access</p>
+        
+        {% if error %}
+            <div class="error-msg">
+                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #ff4d4d;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST" action="/login">
+            <div class="input-group">
+                <label for="username">Administrator ID</label>
+                <input type="text" id="username" name="username" placeholder="Enter Admin ID" required autocomplete="off">
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Security Clearance</label>
+                <input type="password" id="password" name="password" placeholder="Enter Password" required>
+            </div>
+            
+            <button type="submit" class="auth-btn">Authenticate</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

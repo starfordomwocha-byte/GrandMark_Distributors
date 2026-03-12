@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% block title %}GrandMark | The Supply Chain OS{% endblock %}
+
+{% block content %}
+<style>
+    .hero-section {
+        text-align: center;
+        padding: 7rem 1rem 4rem 1rem;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 16px;
+        background: rgba(52, 211, 153, 0.1); 
+        border: 1px solid rgba(52, 211, 153, 0.3);
+        border-radius: 50px;
+        color: #34d399; 
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 2rem;
+    }
+
+    .hero-title {
+        font-size: 4.5rem;
+        font-weight: 900;
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+        letter-spacing: -2px;
+        color: var(--text-color);
+    }
+
+    .hero-title span {
+        background: linear-gradient(135deg, var(--accent-color), #34d399);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: #94a3b8;
+        margin-bottom: 3rem;
+        line-height: 1.6;
+        max-width: 750px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .btn-primary {
+        background: var(--accent-color);
+        color: #0f172a;
+        padding: 16px 40px;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 800;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 25px rgba(56, 189, 248, 0.3);
+    }
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(56, 189, 248, 0.5);
+    }
+
+    .btn-secondary {
+        background: var(--glass-bg);
+        color: var(--text-color);
+        border: 1px solid var(--glass-border);
+        padding: 16px 40px;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 800;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .btn-secondary:hover {
+        background: rgba(255,255,255,0.05);
+        border-color: var(--accent-color);
+    }
+
+    /* --- THE REFINED EXPANDING GRID --- */
+    .features-section {
+        max-width: 1200px;
+        margin: 4rem auto;
+        padding: 0 2rem;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+
+    .feature-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 2.5rem;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: default;
+    }
+
+    /* 1. The Enlarging Animation */
+    .feature-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        border-color: rgba(56, 189, 248, 0.5);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 25px rgba(56, 189, 248, 0.1);
+        z-index: 10;
+    }
+
+    .feature-icon {
+        width: 55px; height: 55px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 14px;
+        display: flex; justify-content: center; align-items: center;
+        font-size: 1.8rem; margin-bottom: 1.5rem;
+        transition: all 0.4s ease;
+    }
+
+    .feature-card:hover .feature-icon {
+        background: var(--accent-color);
+        color: #000;
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    .feature-card h3 { font-size: 1.4rem; font-weight: 800; color: var(--text-color); margin: 0 0 10px 0; }
+    .feature-card p.base-text { color: #94a3b8; font-size: 1.05rem; line-height: 1.6; margin: 0; }
+
+    /* 2. The Smooth "Extra Details" Reveal */
+    .extra-details {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .feature-card:hover .extra-details {
+        max-height: 250px; /* Expands to fit content */
+        opacity: 1;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px dashed rgba(255,255,255,0.1);
+    }
+
+    .detail-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .detail-list li {
+        color: #cbd5e1;
+        font-size: 0.95rem;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .detail-list li::before {
+        content: '→';
+        color: var(--accent-color);
+        font-weight: bold;
+    }
+
+    /* Stats Strip */
+    .stats-strip {
+        display: flex; justify-content: space-around; flex-wrap: wrap;
+        border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
+        background: rgba(0,0,0,0.2); padding: 3rem 0; margin: 5rem 0;
+    }
+    .stat-item { text-align: center; padding: 1rem 2rem; }
+    .stat-num { font-size: 3rem; font-weight: 900; color: var(--accent-color); font-family: 'Plus Jakarta Sans', sans-serif; }
+    .stat-lbl { font-size: 0.9rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+
+</style>
+
+<div class="hero-section" data-aos="zoom-in" data-aos-duration="1000">
+    <h1 class="hero-title">GRANDMARK DISTRIBUTORS LIMITED <span>Modern Supply Chain.</span></h1>
+    <p class="hero-subtitle">GrandMark Distributors provides Africa's fastest-growing enterprises with the dynamic backend required for global commerce. Fully secured. Absolute precision.</p>
+    
+    <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; margin-top: 2rem;">
+        <a href="/catalog" class="btn-primary">View Live Inventory</a>
+        <a href="/client_portal" class="btn-secondary">Client Gateway</a>
+    </div>
+</div>
+
+<div class="features-section">
+    <div style="text-align: center; margin-bottom: 4rem;">
+        <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--text-color); margin-bottom: 10px;">Engineered for Total Control.</h2>
+        <p style="color: #94a3b8; font-size: 1.1rem;">Hover over any module to view technical capabilities.</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+            <div class="feature-icon">📊</div>
+            <h3>Autonomous Ledger</h3>
+            <p class="base-text">Every restock and payment dynamically updates a balanced double-entry cashbook.</p>
+            
+            <div class="extra-details">
+                <ul class="detail-list">
+                    <li>Separates Credits (Revenue) from Debits (Expenses).</li>
+                    <li>Generates real-time, comma-formatted Trial Balances.</li>
+                    <li>Exports official PDF financial audits instantly.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+            <div class="feature-icon">🛡️</div>
+            <h3>Security Core</h3>
+            <p class="base-text">Administrative endpoints are locked behind enterprise-grade security protocols.</p>
+            
+            <div class="extra-details">
+                <ul class="detail-list">
+                    <li>Mandatory Google Authenticator (TOTP) 2FA integration.</li>
+                    <li>Active Intrusion Detection System (IDS).</li>
+                    <li>Automated IP blacklisting for unauthorized access attempts.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+            <div class="feature-icon">📦</div>
+            <h3>Supply Chain Intelligence</h3>
+            <p class="base-text">The system autonomously manages inventory health and order fulfillment limits.</p>
+            
+            <div class="extra-details">
+                <ul class="detail-list">
+                    <li>Real-time database sync via Python and SQLite.</li>
+                    <li>Auto-hides zero-stock items from the public catalog.</li>
+                    <li>Triggers critical dashboard alerts when stock drops below 25 units.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+            <div class="feature-icon">💳</div>
+            <h3>M-PESA B2B Clearing</h3>
+            <p class="base-text">Integrated Safaricom API simulation allows clients to clear multi-million shilling invoices.</p>
+            
+            <div class="extra-details">
+                <ul class="detail-list">
+                    <li>Secure Client Gateway for tracking approved orders.</li>
+                    <li>Dynamic regex engine calculates exact billing totals.</li>
+                    <li>Automatically routes successful payments to the master ledger.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+            <div class="feature-icon">🤖</div>
+            <h3>AI-Powered Copilot</h3>
+            <p class="base-text">Powered by the Google Gemini engine to provide real-time client assistance.</p>
+            
+            <div class="extra-details">
+                <ul class="detail-list">
+                    <li>Uses Retrieval-Augmented Generation (RAG).</li>
+                    <li>Actively reads the live database to quote accurate stock/prices.</li>
+                    <li>Programmed to reject hallucinations and guide user navigation.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="600">
+            <div class="feature-icon">⚙️</div>
+            <h3>Document Automation</h3>
+            <p class="base-text">The backend fully automates the creation and distribution of official company documents.</p>
+            
+            <div class="extra-details">
+                <ul class="detail-list">
+                    <li>Renders dynamic, single-page PDF Proforma Invoices.</li>
+                    <li>Generates warehouse QR codes upon new stock registration.</li>
+                    <li>Dispatches formatted HTML emails directly to clients.</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="stats-strip">
+    <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
+        <div class="stat-num counter" data-target="99">0</div><span style="font-size: 2rem; color: var(--accent-color); font-weight: 900;">.9%</span>
+        <div class="stat-lbl">System Uptime</div>
+    </div>
+    <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
+        <div class="stat-num counter" data-target="50">0</div><span style="font-size: 2rem; color: var(--accent-color); font-weight: 900;">ms</span>
+        <div class="stat-lbl">Ledger Sync Speed</div>
+    </div>
+    <div class="stat-item" data-aos="fade-up" data-aos-delay="300">
+        <div class="stat-num counter" data-target="256">0</div><span style="font-size: 2rem; color: var(--accent-color); font-weight: 900;">-bit</span>
+        <div class="stat-lbl">SHA-256 Encryption</div>
+    </div>
+</div>
+
+<div style="text-align: center; margin: 6rem 0 5rem 0;" data-aos="fade-up">
+    <h2 style="font-size: 3rem; font-weight: 900; margin-bottom: 1.5rem; color: var(--text-color);">Ready to scale your supply chain?</h2>
+    <p style="color: #94a3b8; margin-bottom: 3rem; font-size: 1.15rem; max-width: 600px; margin: 0 auto;">Join the growing network of suppliers and retail clients relying on the GrandMark logistics OS.</p>
+    <a href="/supplier_portal" class="btn-primary" style="display: inline-block; padding: 18px 50px; font-size: 1.1rem; margin-top: 1rem;">Access Supplier Portal</a>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const counters = document.querySelectorAll('.counter');
+        const speed = 100;
+
+        const animateCounters = () => {
+            counters.forEach(counter => {
+                const updateCount = () => {
+                    const target = +counter.getAttribute('data-target');
+                    const count = +counter.innerText;
+                    const inc = target / speed;
+
+                    if (count < target) {
+                        counter.innerText = Math.ceil(count + inc);
+                        setTimeout(updateCount, 20);
+                    } else {
+                        counter.innerText = target;
+                    }
+                };
+                updateCount();
+            });
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        const statsSection = document.querySelector('.stats-strip');
+        if(statsSection) observer.observe(statsSection);
+    });
+</script>
+{% endblock %}

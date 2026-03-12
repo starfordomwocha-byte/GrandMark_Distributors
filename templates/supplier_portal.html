@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Supplier Node | GrandMark{% endblock %}
+
+{% block content %}
+<style>
+    .portal-wrapper { max-width: 500px; margin: 6rem auto 10rem auto; padding: 0 2rem; }
+    .auth-glass { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 3rem; box-shadow: 0 25px 50px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+    
+    .auth-header { text-align: center; margin-bottom: 2.5rem; }
+    .auth-header h1 { font-size: 2rem; font-weight: 900; color: #fff; margin: 0 0 10px 0; }
+    .auth-header p { color: #94a3b8; font-size: 1rem; margin: 0; }
+
+    .form-group { margin-bottom: 1.5rem; }
+    .form-control { width: 100%; padding: 16px 20px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-size: 1rem; box-sizing: border-box; transition: all 0.3s; }
+    .form-control:focus { outline: none; border-color: #818cf8; box-shadow: 0 0 15px rgba(129, 140, 248, 0.2); }
+
+    .btn-submit { background: linear-gradient(135deg, #38bdf8, #818cf8); color: #fff; padding: 16px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 800; text-transform: uppercase; width: 100%; cursor: pointer; transition: all 0.3s; margin-top: 10px; }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(129, 140, 248, 0.4); }
+
+    .toggle-link { display: block; text-align: center; margin-top: 1.5rem; color: #94a3b8; font-size: 0.95rem; cursor: pointer; transition: color 0.3s; }
+    .toggle-link:hover { color: #818cf8; }
+
+    .view-section { display: none; animation: fadeIn 0.4s ease; }
+    .view-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<div class="portal-wrapper" data-aos="zoom-in">
+    <div class="auth-glass">
+        
+        <div id="viewLogin" class="view-section active">
+            <div class="auth-header">
+                <h1>Supplier Node</h1>
+                <p>Access your B2B warehouse injection terminal.</p>
+            </div>
+            <form id="formLogin">
+                <div class="form-group"><input type="email" id="logEmail" class="form-control" placeholder="Authorized Email" required></div>
+                <div class="form-group"><input type="password" id="logPass" class="form-control" placeholder="Password" required></div>
+                <button type="submit" class="btn-submit">Authenticate</button>
+            </form>
+            <span class="toggle-link" onclick="switchView('viewRegister')">Apply to become a GrandMark Supplier</span>
+        </div>
+
+        <div id="viewRegister" class="view-section">
+            <div class="auth-header">
+                <h1>Supplier Application</h1>
+                <p>Register to inject goods into the GrandMark network.</p>
+            </div>
+            <form id="formRegister">
+                <div class="form-group"><input type="text" id="regCompany" class="form-control" placeholder="Manufacturing Company Name" required></div>
+                <div class="form-group"><input type="email" id="regEmail" class="form-control" placeholder="Corporate Email Address" required></div>
+                <div class="form-group"><input type="password" id="regPass" class="form-control" placeholder="Create Secure Password" required></div>
+                <button type="submit" class="btn-submit">Register & Send OTP</button>
+            </form>
+            <span class="toggle-link" onclick="switchView('viewLogin')">Already an authorized supplier? Login</span>
+        </div>
+
+        <div id="viewOTP" class="view-section">
+            <div class="auth-header">
+                <h1 style="color: #818cf8;">Check Your Email</h1>
+                <p>We sent a 6-digit security code to your inbox.</p>
+            </div>
+            <form id="formOTP">
+                <div class="form-group"><input type="text" id="otpCode" class="form-control" placeholder="Enter 6-Digit Code" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; font-weight: bold;" required></div>
+                <button type="submit" class="btn-submit" style="background: #818cf8;">Verify Identity</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let registeredEmail = "";
+
+    function switchView(viewId) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+    }
+
+    // --- REGISTRATION LOGIC ---
+    document.getElementById('formRegister').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button');
+        btn.innerText = "Dispatching Security Code...";
+
+        registeredEmail = document.getElementById('regEmail').value;
+
+        fetch('/supplier/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'register',
+                company_name: document.getElementById('regCompany').value,
+                email: registeredEmail,
+                password: document.getElementById('regPass').value
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) { alert(data.error); btn.innerText = "Register & Send OTP"; } 
+            else if (data.status === "pending_verification") { switchView('viewOTP'); }
+        });
+    });
+
+    // --- OTP VERIFICATION LOGIC ---
+    document.getElementById('formOTP').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button');
+        btn.innerText = "Verifying...";
+
+        fetch('/supplier/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'verify',
+                email: registeredEmail,
+                code: document.getElementById('otpCode').value
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) { alert(data.error); btn.innerText = "Verify Identity"; } 
+            else { alert("Success! Your node is active. Please log in."); switchView('viewLogin'); }
+        });
+    });
+
+    // --- LOGIN LOGIC ---
+    document.getElementById('formLogin').addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch('/supplier/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'login',
+                email: document.getElementById('logEmail').value,
+                password: document.getElementById('logPass').value
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) { alert(data.error); } 
+            else { window.location.href = '/supplier_portal'; } // Reloads to show dashboard!
+        });
+    });
+</script>
+{% endblock %}

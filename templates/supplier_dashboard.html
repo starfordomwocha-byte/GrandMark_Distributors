@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Supplier Node | GrandMark{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-wrapper { max-width: 1200px; margin: 4rem auto 8rem auto; padding: 0 2rem; }
+    
+    .dash-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+    .dash-header h1 { font-size: 2.5rem; font-weight: 900; color: #fff; margin: 0 0 5px 0; }
+    .dash-header p { color: #818cf8; font-size: 1rem; margin: 0; font-weight: bold; }
+    
+    .btn-logout { background: transparent; color: #f87171; border: 1px solid #f87171; padding: 8px 16px; border-radius: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s; text-decoration: none; }
+    .btn-logout:hover { background: #f87171; color: #000; box-shadow: 0 0 15px rgba(248, 113, 113, 0.4); }
+
+    .panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 2.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .panel h2 { font-size: 1.5rem; color: #fff; margin: 0 0 1.5rem 0; font-weight: 800; }
+
+    .table-container { overflow-x: auto; max-height: 600px; }
+    /* Custom Scrollbar for the table */
+    .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
+    .table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+    .table-container::-webkit-scrollbar-thumb { background: rgba(129, 140, 248, 0.3); border-radius: 4px; }
+
+    .dash-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .dash-table th { background: rgba(0,0,0,0.6); color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; padding: 15px; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
+    .dash-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.95rem; vertical-align: middle; }
+    .dash-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .status-tag { display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+    .tag-green { background: rgba(52, 211, 153, 0.1); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.2); }
+    .tag-red { background: rgba(248, 113, 113, 0.1); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); }
+
+    /* Injection Controls */
+    .inject-controls { display: flex; gap: 10px; align-items: center; }
+    .qty-input { width: 80px; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 1rem; text-align: center; }
+    .qty-input:focus { outline: none; border-color: #818cf8; }
+    
+    .btn-inject { background: linear-gradient(135deg, #38bdf8, #818cf8); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+    .btn-inject:hover { box-shadow: 0 0 15px rgba(129, 140, 248, 0.4); transform: translateY(-2px); }
+</style>
+
+<div class="dashboard-wrapper" data-aos="fade-in">
+    <div class="dash-header">
+        <div>
+            <h1>Supplier Injection Node</h1>
+            <p>✓ Authorized Network Partner: {{ company }}</p>
+        </div>
+        <a href="/logout" class="btn-logout">Disconnect Node</a>
+    </div>
+
+    <div class="panel">
+        <h2>Warehouse Inventory Readout</h2>
+        
+        <div class="table-container">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>SKU Code</th>
+                        <th>Product Line</th>
+                        <th>Unit Cost (KES)</th>
+                        <th>Current Volume</th>
+                        <th>B2B Restock Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr>
+                        <td style="font-family: monospace; font-weight: bold; color: #818cf8;">{{ p.sku }}</td>
+                        <td><strong>{{ p.name }}</strong><br><span style="font-size: 0.8rem; color: #64748b;">{{ p.category }}</span></td>
+                        <td style="font-family: monospace;">{{ "{:,.2f}".format(p.unit_cost) }}</td>
+                        <td>
+                            {% if p.stock_quantity < 25 %}
+                                <span class="status-tag tag-red">Critical: {{ p.stock_quantity }}</span>
+                            {% else %}
+                                <span class="status-tag tag-green">Healthy: {{ p.stock_quantity }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="inject-controls">
+                                <input type="number" id="qty-{{ p.id }}" class="qty-input" placeholder="Qty" min="1">
+                                <button class="btn-inject" onclick="injectStock({{ p.id }})">Inject</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function injectStock(productId) {
+        const qtyInput = document.getElementById(`qty-${productId}`);
+        const qty = parseInt(qtyInput.value);
+        const btn = event.target;
+
+        if (!qty || qty <= 0) {
+            alert("Please enter a valid injection quantity.");
+            return;
+        }
+
+        btn.innerText = "Transmitting...";
+        btn.style.opacity = "0.7";
+
+        fetch(`/api/restock/${productId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ qty: qty })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) {
+                alert(data.error);
+                btn.innerText = "Inject";
+                btn.style.opacity = "1";
+            } else {
+                alert(data.message); // Shows the success message and total KES billed
+                location.reload(); // Refresh to show new stock numbers
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Secure Client Dashboard | GrandMark{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-wrapper { max-width: 1200px; margin: 4rem auto 8rem auto; padding: 0 2rem; }
+    
+    .dash-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+    .dash-header h1 { font-size: 2.5rem; font-weight: 900; color: #fff; margin: 0 0 5px 0; }
+    .dash-header p { color: #34d399; font-size: 1rem; margin: 0; font-weight: bold; }
+    
+    .btn-logout { background: transparent; color: #f87171; border: 1px solid #f87171; padding: 8px 16px; border-radius: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s; text-decoration: none; }
+    .btn-logout:hover { background: #f87171; color: #000; box-shadow: 0 0 15px rgba(248, 113, 113, 0.4); }
+
+    .panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 2.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .panel h2 { font-size: 1.5rem; color: #fff; margin: 0 0 1.5rem 0; font-weight: 800; }
+
+    .table-container { overflow-x: auto; }
+    .dash-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .dash-table th { background: rgba(0,0,0,0.4); color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; padding: 15px; }
+    .dash-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.95rem; vertical-align: middle; }
+    .dash-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .status-tag { display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+    .tag-green { background: rgba(52, 211, 153, 0.1); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.2); }
+    .tag-yellow { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+    .tag-red { background: rgba(248, 113, 113, 0.1); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); }
+
+    .btn-pay { background: #34d399; color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+    .btn-pay:hover { box-shadow: 0 0 15px rgba(52, 211, 153, 0.4); transform: translateY(-2px); }
+    .btn-disabled { background: rgba(255,255,255,0.1); color: #64748b; padding: 10px 20px; border-radius: 8px; font-weight: bold; text-transform: uppercase; cursor: not-allowed; border: none; }
+</style>
+
+<div class="dashboard-wrapper" data-aos="fade-in">
+    <div class="dash-header">
+        <div>
+            <h1>Client Procurement Gateway</h1>
+            <p>✓ Secure Connection Established</p>
+        </div>
+        <a href="/logout" class="btn-logout">Disconnect</a>
+    </div>
+
+    <div class="panel">
+        <h2>Active Order Ledger</h2>
+        
+        <div class="table-container">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date Submitted</th>
+                        <th>Order Details</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td style="font-family: monospace; font-weight: bold; color: var(--accent-color);">GMK-00{{ order.id }}</td>
+                        <td style="color: #64748b; font-size: 0.85rem;">{{ order.date_submitted.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td style="max-width: 350px; white-space: pre-wrap; font-size: 0.85rem; line-height: 1.5;">{{ order.message }}</td>
+                        <td>
+                            {% if 'Paid' in order.status %}
+                                <span class="status-tag tag-green">{{ order.status }}</span>
+                            {% elif 'Rejected' in order.status %}
+                                <span class="status-tag tag-red">{{ order.status }}</span>
+                            {% elif 'Approved' in order.status or 'Awaiting Payment' in order.status %}
+                                <span class="status-tag tag-yellow">Awaiting Payment</span>
+                            {% else %}
+                                <span class="status-tag" style="background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);">{{ order.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if 'Approved' in order.status or 'Awaiting Payment' in order.status %}
+                                <button class="btn-pay" onclick="simulateMPESA({{ order.id }}, event)">Clear Invoice</button>
+                            {% elif 'Paid' in order.status %}
+                                <button class="btn-disabled" disabled>Cleared</button>
+                            {% else %}
+                                <button class="btn-disabled" disabled>Pending Admin</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 3rem; color: #64748b;">
+                            No active procurement orders found.<br>
+                            <a href="/catalog" style="color: var(--accent-color); text-decoration: none; font-weight: bold; margin-top: 10px; display: inline-block;">Browse Catalog</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function simulateMPESA(orderId, event) {
+        const btn = event.target;
+        btn.innerText = "Processing...";
+        btn.style.background = "#f59e0b"; // Turns amber to show it's "thinking"
+        btn.style.opacity = "0.8";
+        btn.disabled = true;
+
+        // Cinematic 1.5 second delay
+        setTimeout(() => {
+            fetch(`/api/mpesa_pay/${orderId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.error) {
+                    alert("Payment Failed: " + data.error);
+                    btn.innerText = "Clear Invoice";
+                    btn.style.background = "#34d399";
+                    btn.style.opacity = "1";
+                    btn.disabled = false;
+                } else {
+                    alert("✅ M-PESA Payment Verified! Inventory deducted and receipt generated.");
+                    location.reload(); // Reloads the page so the row turns green and says "Paid"
+                }
+            })
+            .catch(err => {
+                alert("Network Error");
+                btn.innerText = "Clear Invoice";
+                btn.style.background = "#34d399";
+                btn.style.opacity = "1";
+                btn.disabled = false;
+            });
+        }, 1500); 
+    }
+</script>
+{% endblock %}

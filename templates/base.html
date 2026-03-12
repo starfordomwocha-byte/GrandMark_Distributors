@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}GrandMark Distributors{% endblock %}</title>
+    
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#000f1e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        /* --- PERMANENT ULTRA-CLEAR GLASS THEME --- */
+        :root {
+             --bg-image: url('https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=2070&auto=format&fit=crop');            --overlay-color: rgba(0, 15, 30, 0.6); /* Soft overlay to make text readable */
+            
+            /* THIS is your original "almost clear" glass effect */
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            
+            --text-color: #ffffff;
+            --accent-color: #f0a500;
+            --nav-hover: rgba(240, 165, 0, 0.5);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            background-image: var(--bg-image);
+            background-color: var(--overlay-color);
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-color); z-index: -1; }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+        }
+
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 4rem; margin: 20px; }
+        .logo { display: flex; align-items: center; text-decoration: none; }
+        .logo img { height: 55px; border-radius: 8px; transition: transform 0.3s ease; }
+        .logo img:hover { transform: scale(1.05); }
+
+        .nav-links { display: flex; align-items: center; }
+        .nav-links a {
+            color: var(--text-color); text-decoration: none; margin: 0 20px;
+            font-weight: 500; font-size: 1.1rem; transition: all 0.3s ease;
+        }
+        .nav-links a:hover { color: var(--accent-color); text-shadow: 0 0 10px var(--nav-hover); }
+
+        .page-content { flex: 1; padding: 2rem 4rem; max-width: 1200px; margin: 0 auto; width: 100%; overflow-x: hidden; }
+        footer { text-align: center; padding: 2rem; color: var(--text-color); margin-top: auto; opacity: 0.8; }
+        
+        @media (max-width: 768px) {
+            nav { flex-direction: column; gap: 15px; padding: 1.5rem; }
+            .nav-links { flex-direction: column; gap: 10px; }
+            .nav-links a { margin: 0; }
+            .page-content { padding: 1rem; }
+        }
+
+        /* --- CHATBOT CSS --- */
+        #chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        #chat-bubble {
+            width: 60px; height: 60px; background: var(--accent-color); border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+        }
+        #chat-bubble:hover { transform: scale(1.1); }
+        #chat-bubble svg { width: 30px; height: 30px; fill: #000; }
+        
+        #chat-window {
+            display: none; width: 350px; height: 450px;
+            background: var(--glass-bg); backdrop-filter: blur(10px);
+            border: 1px solid var(--accent-color); border-radius: 12px;
+            position: absolute; bottom: 80px; right: 0;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            flex-direction: column; overflow: hidden;
+        }
+        
+        .chat-header {
+            background: rgba(0,0,0,0.8); padding: 15px; border-bottom: 2px solid var(--accent-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .chat-header h4 { margin: 0; color: var(--accent-color); font-size: 1.1rem; }
+        .close-chat { color: var(--text-color); cursor: pointer; font-weight: bold; font-size: 1.2rem; }
+        
+        #chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 15px; border-radius: 8px; max-width: 80%; font-size: 0.9rem; line-height: 1.4; color: #fff; }
+        .bot-msg { background: rgba(255,255,255,0.1); align-self: flex-start; border-bottom-left-radius: 0; }
+        .user-msg { background: var(--accent-color); color: #000; align-self: flex-end; border-bottom-right-radius: 0; font-weight: bold; }
+        
+        .chat-input-area { display: flex; padding: 10px; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.5); }
+        #chatInput { flex: 1; padding: 10px; border: none; border-radius: 4px; background: rgba(255,255,255,0.9); color: #000; outline: none; }
+        #sendChat { background: var(--accent-color); color: #000; border: none; padding: 0 15px; margin-left: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+
+    <nav class="glass-panel" data-aos="fade-down" data-aos-duration="1000">
+        <a href="/" class="logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="GrandMark Distributors Logo">
+        </a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/services">Services</a>
+            <a href="/about">About</a>
+            <a href="/catalog">Catalog</a>
+            <a href="/client_portal" style="color: #17a2b8; font-weight: 800;">Client Login</a>
+            <a href="/supplier_portal" style="color: #818cf8; font-weight: 800;">Supplier Portal</a>
+            <a href="/admin">Admin Portal</a>
+            </div>
+    </nav>
+
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="glass-panel" style="margin: 20px; border-radius: 16px;" data-aos="fade-up" data-aos-duration="1000">
+        <p>&copy; 2026 GrandMark Distributors. Global Sourcing, Superior Logistics.</p>
+    </footer>
+
+    <div id="chat-widget">
+        <div id="chat-window">
+            <div class="chat-header">
+                <h4>GrandMark Assistant</h4>
+                <span class="close-chat" onclick="toggleChat()">×</span>
+            </div>
+            <div id="chat-messages">
+                <div class="msg bot-msg">Hello! I'm the GrandMark virtual assistant. How can I help you navigate our wholesale logistics platform today?</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleEnter(event)">
+                <button id="sendChat" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+        <div id="chat-bubble" onclick="toggleChat()">
+            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 1000, easing: 'ease-in-out-cubic', once: true });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js', { scope: '/' });
+            });
+        }
+
+        // Chatbot Logic
+        const chatWindow = document.getElementById('chat-window');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chatInput');
+
+        function toggleChat() { chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex'; }
+        function handleEnter(e) { if (e.key === 'Enter') sendMessage(); }
+
+        function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            appendMessage(text, 'user-msg');
+            chatInput.value = '';
+
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            })
+            .then(res => res.json())
+            .then(data => {
+                setTimeout(() => appendMessage(data.reply, 'bot-msg'), 400); 
+            });
+        }
+
+        function appendMessage(text, className) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${className}`;
+            msgDiv.innerText = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight; 
+        }
+    </script>
+</body>
+</html>

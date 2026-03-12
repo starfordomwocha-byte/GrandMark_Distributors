@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}2FA Authentication | GrandMark{% endblock %}
+
+{% block content %}
+<style>
+    .auth-container { display: flex; justify-content: center; align-items: center; min-height: 70vh; }
+    .auth-card { 
+        width: 100%; max-width: 420px; padding: 3rem; text-align: center; 
+        background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); 
+        border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(56, 189, 248, 0.1);
+    }
+    .auth-card h2 { color: #f8fafc; font-weight: 800; margin-bottom: 5px; }
+    .auth-card p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 25px; }
+    
+    .qr-box { background: #fff; padding: 15px; border-radius: 12px; display: inline-block; margin-bottom: 25px; }
+    .qr-box img { width: 180px; height: 180px; }
+
+    .input-code {
+        width: 100%; padding: 15px; background: rgba(15, 23, 42, 0.8); color: #fff; 
+        border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; font-size: 1.5rem; 
+        text-align: center; letter-spacing: 5px; font-family: monospace; font-weight: bold;
+        transition: all 0.3s; margin-bottom: 20px;
+    }
+    .input-code:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+
+    .verify-btn { 
+        width: 100%; padding: 15px; background: linear-gradient(135deg, #38bdf8, #818cf8); 
+        color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 1.1rem; 
+        cursor: pointer; text-transform: uppercase; transition: all 0.3s; 
+    }
+    .verify-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(56, 189, 248, 0.4); }
+</style>
+
+<div class="auth-container" data-aos="zoom-in" data-aos-duration="800">
+    <div class="auth-card">
+        <h2>TWO-FACTOR AUTH</h2>
+        <p style="margin-bottom: 20px;">
+            <a href="#" onclick="document.getElementById('qrSection').style.display='block'; this.style.display='none';" style="color: #38bdf8; font-size: 0.85rem; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #38bdf8;">
+                First time logging in? Click to reveal Setup QR Code
+            </a>
+        </p>
+
+        <div id="qrSection" style="display: none; transition: all 0.3s;">
+            <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 10px;">Scan this with Google Authenticator, then enter the code below.</p>
+            <div class="qr-box">
+                <img src="{{ qr_url }}" alt="2FA QR Code">
+            </div>
+        </div>
+
+        {% if error %}
+            <div style="color: #f87171; font-weight: bold; margin-bottom: 15px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;">
+                ❌ {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST" action="/2fa">
+            <input type="text" name="otp" class="input-code" placeholder="000000" maxlength="6" required autocomplete="off" autofocus>
+            <button type="submit" class="verify-btn">Verify Identity</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
