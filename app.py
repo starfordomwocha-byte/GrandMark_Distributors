@@ -30,7 +30,7 @@ app = Flask(__name__)
 app.secret_key = 'super_secret_grandmark_key_123'
 
 # --- CLOUD DATABASE CONFIGURATION (RENDER + SQLITE FALLBACK) ---
-db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
+db_url = os.environ.get('DATABASE_URL', 'sqlite:///grandmark.db')
 
 # SQLAlchemy requires 'postgresql://' but Render sometimes gives 'postgres://'. This fixes that bug automatically.
 if db_url.startswith("postgres://"):
@@ -93,7 +93,8 @@ class Product(db.Model):
     name = db.Column(db.String(100), nullable=False)
     sku = db.Column(db.String(50), unique=True, nullable=False)
     category = db.Column(db.String(50))
-    unit_cost = db.Column(db.Float, nullable=False)
+    buying_price = db.Column(db.Float, nullable=False, default=0.0) # <-- NEW: What GrandMark pays
+    unit_cost = db.Column(db.Float, nullable=False) # <-- EXISTING: What the Client pays (Selling Price)
     stock_quantity = db.Column(db.Integer, default=0)
 
 class Inquiry(db.Model):
@@ -215,8 +216,50 @@ def services():
     return render_template('services.html')
 
 @app.route('/about')
-def about(): 
+def about():
     return render_template('about.html')
+
+@app.route('/testimonials')
+def testimonials():
+    return render_template('testimonials.html')
+
+@app.route('/faq')
+def faq():
+    return render_template('faq.html')
+
+@app.route('/track')
+def track():
+    return render_template('track.html')
+
+@app.route('/api/track/<int:order_id>')
+def api_track_order(order_id):
+    inq = Inquiry.query.get(order_id)
+    if not inq:
+        return jsonify({'error': 'Order not found. Please check the ID and try again.'}), 404
+
+    status = inq.status
+    steps = ['Submitted', 'Under Review', 'Approved', 'Paid', 'Dispatched']
+    current_step = 0
+    if 'Pending' in status:
+        current_step = 1
+    elif 'Approved' in status or 'Awaiting Payment' in status:
+        current_step = 2
+    elif 'Paid' in status:
+        current_step = 3
+    elif 'Dispatched' in status or 'Completed' in status:
+        current_step = 4
+
+    return jsonify({
+        'id': inq.id,
+        'company_name': inq.company_name,
+        'contact_email': inq.contact_email,
+        'inquiry_type': inq.inquiry_type,
+        'message': inq.message,
+        'status': inq.status,
+        'date_submitted': inq.date_submitted.strftime('%Y-%m-%d %H:%M'),
+        'current_step': current_step,
+        'steps': steps
+    })
 
 @app.route('/secret-seed-database-123')
 def secret_seed():
@@ -265,58 +308,14 @@ def supplier_auth():
     elif action == 'login':
         password = data.get('password')
         user = Supplier.query.filter_by(email=email).first()
-        
+
         if user and check_password_hash(user.password_hash, password):
             session['supplier_logged_in'] = True
             session['supplier_id'] = user.id
             session['supplier_email'] = user.email
             session['supplier_company'] = user.company_name
             return jsonify({"message": "Login successful!"})
-            
-        return jsonify({"error": "Invalid credentials."}), 401
-            
-        # Normal creation for brand new emails
-        otp_code = str(random.randint(100000, 999999))
-        hashed_pw = generate_password_hash(password)
-        new_supplier = Supplier(
-            company_name=company, 
-            email=email, 
-            password_hash=hashed_pw,
-            is_verified=False,
-            verification_code=otp_code
-        )
-        db.session.add(new_supplier)
-        db.session.commit()
-        send_otp_email(email, otp_code)
-        
-        return jsonify({"message": "Verification email dispatched.", "status": "pending_verification"})
 
-    elif action == 'verify':
-        code_entered = data.get('code')
-        user = Supplier.query.filter_by(email=email).first()
-        
-        if user and user.verification_code == code_entered:
-            user.is_verified = True
-            user.verification_code = None
-            db.session.commit()
-            return jsonify({"message": "Account verified successfully!"})
-        else:
-            return jsonify({"error": "Invalid or expired verification code."}), 400
-
-    elif action == 'login':
-        password = data.get('password')
-        user = Supplier.query.filter_by(email=email).first()
-        
-        if user and check_password_hash(user.password_hash, password):
-            if not user.is_verified:
-                return jsonify({"error": "Account is locked. Please complete email verification."}), 403
-            
-            session['supplier_logged_in'] = True
-            session['supplier_id'] = user.id
-            session['supplier_email'] = user.email
-            session['supplier_company'] = user.company_name
-            return jsonify({"message": "Login successful!"})
-            
         return jsonify({"error": "Invalid credentials."}), 401
 
 @app.route('/api/restock/<int:product_id>', methods=['POST'])
@@ -545,82 +544,109 @@ def submit_inquiry():
         db.session.rollback()
         return jsonify({"error": "Database rejection. Could not save order."}), 500
 
-# --- THE COMPACT ENTERPRISE PDF ENGINE ---
+# ---------------------------------------------------------------------------
+# PREMIUM PDF RECEIPT GENERATOR
+# ---------------------------------------------------------------------------
+class ReceiptPDF(FPDF):
+    """Professional order receipt PDF."""
+
+    NAVY = (26, 58, 92)
+    GOLD = (245, 166, 35)
+    DARK = (33, 37, 41)
+    GREY = (108, 117, 125)
+    LIGHT_BG = (245, 247, 250)
+    WHITE = (255, 255, 255)
+
+    def header(self):
+        # Navy header bar
+        self.set_fill_color(*self.NAVY)
+        self.rect(0, 0, 210, 38, "F")
+        # Company name
+        self.set_font("Helvetica", "B", 20)
+        self.set_text_color(*self.WHITE)
+        self.set_xy(15, 8)
+        self.cell(0, 10, "GRANDMARK DISTRIBUTORS", ln=False)
+        # Tagline
+        self.set_font("Helvetica", "", 8)
+        self.set_xy(15, 20)
+        self.cell(0, 5, "Your Trusted Wholesale Partner in Kenya")
+        # Gold accent line
+        self.set_fill_color(*self.GOLD)
+        self.rect(0, 38, 210, 2, "F")
+        self.ln(25)
+
+    def footer(self):
+        self.set_y(-30)
+        self.set_draw_color(*self.NAVY)
+        self.line(15, self.get_y(), 195, self.get_y())
+        self.ln(4)
+        self.set_font("Helvetica", "", 7)
+        self.set_text_color(*self.GREY)
+        self.cell(0, 4, "Grandmark Distributors Ltd  |  Industrial Area, Nairobi, Kenya  |  +254 700 123 456  |  info@grandmarkdistributors.co.ke", align="C", ln=True)
+        self.cell(0, 4, "Thank you for your business! Prices include VAT where indicated. This is a computer-generated receipt.", align="C")
+
 def create_pdf(inq):
-    pdf = FPDF()
-    pdf.add_page()
-    
-    pdf.set_auto_page_break(auto=True, margin=15) 
-    
-    COLOR_PRIMARY = (15, 23, 42)     
-    COLOR_ACCENT = (56, 189, 248)    
-    COLOR_TEXT = (51, 65, 85)        
-    COLOR_MUTED = (148, 163, 184)    
-    COLOR_LINE = (226, 232, 240)     
-    
-    pdf.set_fill_color(*COLOR_ACCENT)
-    pdf.rect(0, 0, 210, 5, 'F') 
-    
-    logo_path = os.path.join(app.root_path, 'static', 'logo.png')
-    if os.path.exists(logo_path):
-        try: pdf.image(logo_path, x=10, y=12, h=14)
-        except: pass 
-        
+    """Builds a professional receipt PDF using the DB Inquiry object."""
+    VAT_RATE = 0.16
+    DELIVERY_FEE = 250.0
     is_paid = 'Paid' in inq.status
-    doc_title = "TAX INVOICE"
+
+    pdf = ReceiptPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=35)
+
+    # --- Title row ---
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.set_text_color(*ReceiptPDF.NAVY)
+    pdf.cell(100, 8, "ORDER RECEIPT / INVOICE", ln=False)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(*ReceiptPDF.GREY)
+    pdf.cell(0, 8, f"Date: {inq.date_submitted.strftime('%d %B %Y, %H:%M')}", align="R", ln=True)
+    pdf.ln(2)
+
+    # --- Order info box ---
+    pdf.set_fill_color(*ReceiptPDF.LIGHT_BG)
+    y0 = pdf.get_y()
+    pdf.rect(15, y0, 180, 28, "F")
+
+    pdf.set_xy(20, y0 + 3)
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_text_color(*ReceiptPDF.NAVY)
+    pdf.cell(45, 5, "Order Reference:", ln=False)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(*ReceiptPDF.DARK)
+    pdf.cell(45, 5, f"GMK-00{inq.id}", ln=False)
+
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_text_color(*ReceiptPDF.NAVY)
+    pdf.cell(35, 5, "Status:", ln=False)
+    pdf.set_font("Helvetica", "B", 9)
     
-    pdf.set_y(15)
-    pdf.set_font("Helvetica", 'B', 28)
-    pdf.set_text_color(*COLOR_PRIMARY)
-    pdf.cell(0, 10, doc_title, ln=True, align='R')
-    
-    pdf.set_font("Helvetica", 'B', 10)
-    pdf.set_text_color(*COLOR_MUTED)
-    pdf.cell(0, 5, f"Invoice No: GMK-{inq.id:04d}", ln=True, align='R')
-    pdf.set_font("Helvetica", '', 10)
-    pdf.cell(0, 5, f"Date Issued: {inq.date_submitted.strftime('%d %B %Y')}", ln=True, align='R')
-    pdf.ln(5)
-    
-    pdf.set_y(40)
+    # Status coloring
     if is_paid:
-        pdf.set_fill_color(220, 252, 231) 
-        pdf.set_text_color(22, 163, 74)   
-        status_msg = "STATUS: PAID IN FULL - CLEARED FOR DISPATCH"
+        pdf.set_text_color(34, 197, 94) # Green
+        pdf.cell(0, 5, "PAID IN FULL", ln=True)
     else:
-        pdf.set_fill_color(254, 226, 226) 
-        pdf.set_text_color(220, 38, 38)   
-        status_msg = "STATUS: PAYMENT DUE - AWAITING M-PESA CLEARANCE"
-        
-    pdf.set_font("Helvetica", 'B', 9)
-    pdf.cell(0, 8, f"  {status_msg}", ln=True, fill=True, align='C')
-    pdf.ln(5)
-    
-    pdf.set_text_color(*COLOR_ACCENT)
-    pdf.set_font("Helvetica", 'B', 9)
-    pdf.cell(100, 5, "FROM:", ln=False)
-    pdf.cell(90, 5, "BILLED TO:", ln=True)
-    
-    pdf.set_text_color(*COLOR_PRIMARY)
-    pdf.set_font("Helvetica", 'B', 11)
-    
-    start_y = pdf.get_y()
-    pdf.set_xy(10, start_y)
-    pdf.cell(100, 5, "GrandMark Logistics Ltd.")
-    pdf.set_xy(110, start_y)
-    pdf.cell(90, 5, inq.company_name)
-    pdf.ln(5)
-    
-    pdf.set_text_color(*COLOR_TEXT)
-    pdf.set_font("Helvetica", '', 10)
-    
-    start_y = pdf.get_y()
-    pdf.set_xy(10, start_y)
-    pdf.multi_cell(90, 5, "GrandMark Industrial Park\nNairobi, Kenya\nKRA PIN: P012345678Z")
-    
-    pdf.set_xy(110, start_y)
-    pdf.multi_cell(90, 5, f"{inq.contact_email}\nClient ID: CLI-{inq.id:04d}")
-    pdf.ln(8)
-    
+        pdf.set_text_color(239, 68, 68) # Red
+        pdf.cell(0, 5, "PAYMENT DUE", ln=True)
+
+    pdf.set_x(20)
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_text_color(*ReceiptPDF.NAVY)
+    pdf.cell(45, 5, "Customer:", ln=False)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(*ReceiptPDF.DARK)
+    pdf.cell(45, 5, inq.company_name[:25], ln=False)
+
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_text_color(*ReceiptPDF.NAVY)
+    pdf.cell(35, 5, "Email:", ln=False)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(*ReceiptPDF.DARK)
+    pdf.cell(0, 5, inq.contact_email, ln=True)
+    pdf.ln(15)
+
+    # --- Parse Items from Database ---
     items = []
     matches = re.finditer(r'(\d+)\s+units of\s+(.*?)\.', inq.message, re.IGNORECASE)
     for match in matches:
@@ -628,85 +654,105 @@ def create_pdf(inq):
         name = match.group(2).strip()
         db_prod = Product.query.filter_by(name=name).first()
         unit_price = db_prod.unit_cost if db_prod else 0.0
-        line_total = qty * unit_price
-        items.append({'qty': qty, 'name': name, 'unit_price': unit_price, 'line_total': line_total})
+        cat_name = db_prod.category if db_prod and db_prod.category else "-"
+        items.append({'qty': qty, 'name': name, 'unit_price': unit_price, 'category': cat_name})
         
-    amount_match = re.search(r'TOTAL AMOUNT DUE: KES ([\d,]+\.\d{2})', inq.message)
-    grand_total = float(amount_match.group(1).replace(',', '')) if amount_match else sum(i['line_total'] for i in items)
+    if not items: # Fallback if empty
+        items.append({'qty': 1, 'name': 'Standard Logistics Fulfillment', 'unit_price': 0.0, 'category': 'Service'})
+
+    # --- Product table header ---
+    pdf.set_fill_color(*ReceiptPDF.NAVY)
+    pdf.set_text_color(*ReceiptPDF.WHITE)
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.cell(10, 8, "#", border=0, fill=True, align="C")
+    pdf.cell(75, 8, "Product", border=0, fill=True)
+    pdf.cell(25, 8, "Category", border=0, fill=True, align="C")
+    pdf.cell(25, 8, "Qty", border=0, fill=True, align="C")
+    pdf.cell(22, 8, "Price", border=0, fill=True, align="R")
+    pdf.cell(23, 8, "Subtotal", border=0, fill=True, align="R")
+    pdf.ln()
+
+    # --- Product rows ---
+    pdf.set_font("Helvetica", "", 8.5)
+    pdf.set_text_color(*ReceiptPDF.DARK)
+    subtotal = 0.0
+    
+    for idx, item in enumerate(items, 1):
+        row_sub = item['qty'] * item['unit_price']
+        subtotal += row_sub
         
-    subtotal = grand_total / 1.16
-    vat_amount = grand_total - subtotal
-    
-    if not items:
-        items.append({'qty': 1, 'name': 'Standard Logistics Fulfillment', 'unit_price': grand_total, 'line_total': grand_total})
-    
-    pdf.set_fill_color(*COLOR_PRIMARY)
-    pdf.set_text_color(255, 255, 255)
-    pdf.set_font("Helvetica", 'B', 9)
-    
-    pdf.cell(85, 7, "  ITEM DESCRIPTION", border=0, fill=True)
-    pdf.cell(20, 7, "QTY", border=0, fill=True, align='C')
-    pdf.cell(40, 7, "UNIT PRICE (KES)", border=0, fill=True, align='R')
-    pdf.cell(45, 7, "LINE TOTAL (KES)", border=0, fill=True, align='R')
-    pdf.ln(7)
-    
-    pdf.set_text_color(*COLOR_TEXT)
-    pdf.set_font("Helvetica", '', 9)
-    pdf.set_draw_color(*COLOR_LINE)
-    pdf.set_line_width(0.2)
-    
-    for item in items:
-        short_name = item['name'][:45] + "..." if len(item['name']) > 45 else item['name']
-        
-        pdf.cell(85, 7, f"  {short_name}", border='B')
-        pdf.cell(20, 7, str(item['qty']), border='B', align='C')
-        pdf.cell(40, 7, f"{item['unit_price']:,.2f}", border='B', align='R')
-        
-        pdf.set_font("Helvetica", 'B', 9)
-        pdf.cell(45, 7, f"{item['line_total']:,.2f}  ", border='B', align='R')
-        pdf.set_font("Helvetica", '', 9)
-        pdf.ln(7)
-        
+        # Alternate row background
+        if idx % 2 == 0:
+            pdf.set_fill_color(248, 249, 252)
+            fill = True
+        else:
+            fill = False
+            
+        pdf.cell(10, 7, str(idx), border=0, fill=fill, align="C")
+        pdf.cell(75, 7, item['name'][:42], border=0, fill=fill)
+        pdf.cell(25, 7, item['category'][:12], border=0, fill=fill, align="C")
+        pdf.cell(25, 7, str(item['qty']), border=0, fill=fill, align="C")
+        pdf.cell(22, 7, f"{item['unit_price']:,.0f}", border=0, fill=fill, align="R")
+        pdf.cell(23, 7, f"{row_sub:,.0f}", border=0, fill=fill, align="R")
+        pdf.ln()
+
+    # --- Separator ---
+    pdf.set_draw_color(*ReceiptPDF.NAVY)
+    pdf.line(15, pdf.get_y(), 195, pdf.get_y())
     pdf.ln(4)
-    pdf.set_x(110)
-    pdf.set_font("Helvetica", '', 9)
-    pdf.set_text_color(*COLOR_TEXT)
-    
-    pdf.cell(40, 6, "Subtotal (Excl. VAT):", align='R')
-    pdf.cell(40, 6, f"KES {subtotal:,.2f}  ", align='R', ln=True)
-    
-    pdf.set_x(110)
-    pdf.cell(40, 6, "VAT (16%):", align='R')
-    pdf.cell(40, 6, f"KES {vat_amount:,.2f}  ", align='R', ln=True)
-    pdf.ln(2)
-    
-    pdf.set_x(110)
-    pdf.set_fill_color(*COLOR_PRIMARY)
-    pdf.set_text_color(255, 255, 255)
-    pdf.set_font("Helvetica", 'B', 11)
-    pdf.cell(40, 10, " GRAND TOTAL", fill=True, align='L')
-    pdf.set_text_color(*COLOR_ACCENT)
-    pdf.cell(40, 10, f"KES {grand_total:,.2f}  ", fill=True, align='R', ln=True)
-    
-    pdf.set_y(-18) 
-    pdf.set_draw_color(*COLOR_ACCENT)
-    pdf.set_line_width(0.5)
-    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-    pdf.ln(4)
-    
-    pdf.set_text_color(*COLOR_PRIMARY)
-    pdf.set_font("Helvetica", 'B', 8)
-    pdf.cell(0, 4, "Thank you for partnering with GrandMark Logistics.", ln=True, align='C')
-    
-    pdf.set_text_color(*COLOR_MUTED)
-    pdf.set_font("Helvetica", '', 7)
-    pdf.cell(0, 3, "This is a computer-generated tax document. No physical signature is required.", ln=True, align='C')
-    pdf.cell(0, 3, "GrandMark Internal Systems 2026 | Automated Enterprise Software", ln=True, align='C')
-    
+
+    # --- Totals aligned right ---
+    tax = subtotal * VAT_RATE
+    grand_total = subtotal + tax + DELIVERY_FEE
+
+    x_label = 130
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(*ReceiptPDF.DARK)
+
+    pdf.set_x(x_label)
+    pdf.cell(42, 6, "Subtotal:", align="R", ln=False)
+    pdf.cell(23, 6, f"KES {subtotal:,.0f}", align="R", ln=True)
+
+    pdf.set_x(x_label)
+    pdf.cell(42, 6, f"VAT ({VAT_RATE*100:.0f}%):", align="R", ln=False)
+    pdf.cell(23, 6, f"KES {tax:,.0f}", align="R", ln=True)
+
+    pdf.set_x(x_label)
+    pdf.cell(42, 6, "Delivery Fee:", align="R", ln=False)
+    pdf.cell(23, 6, f"KES {DELIVERY_FEE:,.0f}", align="R", ln=True)
+
+    pdf.ln(1)
+    pdf.set_fill_color(*ReceiptPDF.NAVY)
+    pdf.set_text_color(*ReceiptPDF.WHITE)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_x(x_label)
+    pdf.cell(42, 9, "TOTAL DUE:", align="R", fill=True, ln=False)
+    pdf.set_text_color(*ReceiptPDF.GOLD)
+    pdf.cell(23, 9, f"KES {grand_total:,.0f}", align="R", fill=True, ln=True)
+
+    pdf.set_text_color(*ReceiptPDF.DARK)
+    pdf.ln(6)
+
+    # --- Payment info box ---
+    if is_paid:
+        pdf.set_fill_color(255, 248, 235)
+        y0 = pdf.get_y()
+        pdf.rect(15, y0, 180, 16, "F")
+        pdf.set_xy(20, y0 + 2)
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_text_color(*ReceiptPDF.GOLD)
+        pdf.cell(0, 5, "Payment Confirmation", ln=True)
+        pdf.set_x(20)
+        pdf.set_font("Helvetica", "", 8)
+        pdf.set_text_color(*ReceiptPDF.DARK)
+        pdf.cell(0, 5, f"Verified via Safaricom M-PESA. Transaction Reference Logged.", ln=True)
+
+    # Save to Instance folder (required for email attachment to work)
     instance_dir = os.path.join(app.root_path, 'instance')
     os.makedirs(instance_dir, exist_ok=True)
     filepath = os.path.join(instance_dir, f"invoice_{inq.id}.pdf")
     pdf.output(filepath)
+    
     return filepath
 
 def send_otp_email(target_email, code):
@@ -841,7 +887,7 @@ def send_approval_email(recipient_email, company_name, pdf_path, inq_id, is_paid
     try:
         msg = MIMEMultipart('alternative')
         msg['Subject'] = f"Official Document #GMK-00{inq_id} - GrandMark Logistics"
-        msg['From'] = SENDER_EMAIL
+        msg['From'] = f"GrandMark Distributors <{SENDER_EMAIL}>"
         msg['To'] = recipient_email
         
         if is_paid:
@@ -946,15 +992,28 @@ def mpesa_pay(inq_id):
     if inq and ('Pending' in inq.status or 'Approved' in inq.status or 'Awaiting Payment' in inq.status):
         import random
         import string
+        import re
         
-        # Generate a fake M-PESA receipt code (e.g., QWE123RTY)
+        # 1. Generate a fake M-PESA receipt code (e.g., QWE123RTY)
         fake_receipt = ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
-        
-        # Update the database
         inq.status = f'Paid (Ref: {fake_receipt})'
+        
+        # 2. Extract the exact amount from the invoice message
+        amount_match = re.search(r'TOTAL AMOUNT DUE: KES ([\d,]+\.\d{2})', inq.message)
+        exact_amount = float(amount_match.group(1).replace(',', '')) if amount_match else 0.0
+        
+        # 3. Inject the cash directly into the Executive Ledger
+        if exact_amount > 0:
+            new_ledger = Ledger(
+                transaction_type='Credit',
+                amount=exact_amount,
+                description=f"M-PESA Settlement (Simulated) | Order GMK-00{inq.id} | Ref: {fake_receipt}"
+            )
+            db.session.add(new_ledger)
+        
         db.session.commit()
         
-        print(f"[+] SIMULATION: Order GMK-00{inq.id} marked as PAID. Ref: {fake_receipt}")
+        print(f"[+] SIMULATION: Order GMK-00{inq.id} marked as PAID. Cashbook updated with KES {exact_amount}.")
         return jsonify({"message": "Payment simulation successful!"}), 200
             
     return jsonify({"error": "Order not found or already processed."}), 404
@@ -1005,20 +1064,36 @@ def mpesa_callback():
 def add_product():
     if not session.get('logged_in'): return jsonify({"error": "Unauthorized"}), 403
     data = request.json
-    unit_cost = float(data['unit_cost'])
-    stock_qty = int(data['stock_quantity'])
-    total_expense = unit_cost * stock_qty
     
-    db.session.add(Product(name=data['name'], sku=data['sku'], category=data['category'], unit_cost=unit_cost, stock_quantity=stock_qty))
-    db.session.add(Ledger(transaction_type='Debit', amount=total_expense, description=f"Warehouse Stock Purchase: {stock_qty}x {data['name']} (SKU: {data['sku']})"))
+    buying_price = float(data.get('buying_price', 0))
+    selling_price = float(data['unit_cost'])
+    stock_qty = int(data['stock_quantity'])
+    
+    # REAL ACCOUNTING: Expense is based on what YOU paid for it, not what you sell it for!
+    total_expense = buying_price * stock_qty
+    
+    db.session.add(Product(
+        name=data['name'], 
+        sku=data['sku'], 
+        category=data['category'], 
+        buying_price=buying_price, 
+        unit_cost=selling_price, 
+        stock_quantity=stock_qty
+    ))
+    
+    db.session.add(Ledger(
+        transaction_type='Debit', 
+        amount=total_expense, 
+        description=f"Warehouse Stock Purchase: {stock_qty}x {data['name']} @ KES {buying_price} each"
+    ))
     
     qr_dir = os.path.join(app.root_path, 'static', 'qrcodes')
     os.makedirs(qr_dir, exist_ok=True)
-    img = qrcode.make(f"SKU: {data['sku']}\nProduct: {data['name']}\nCost: KES {unit_cost}")
+    img = qrcode.make(f"SKU: {data['sku']}\nProduct: {data['name']}\nCost: KES {selling_price}")
     img.save(os.path.join(qr_dir, f"{data['sku']}.png"))
     
     db.session.commit()
-    return jsonify({"message": "Product successfully registered, Expense logged to Ledger, and QR Code generated!"})
+    return jsonify({"message": "Product registered, true expense logged, and QR Code generated!"})
 
 @app.route('/api/delete_product/<int:product_id>', methods=['DELETE'])
 def delete_product(product_id):
