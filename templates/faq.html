@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block title %}FAQ | GrandMark{% endblock %}
+
+{% block content %}
+<style>
+    .faq-header { text-align: center; padding: 6rem 1rem 2rem 1rem; }
+    .faq-header h1 { font-size: 4rem; font-weight: 900; color: var(--text-color); margin-bottom: 1rem; letter-spacing: -1px; }
+    .faq-header p { color: #94a3b8; font-size: 1.2rem; max-width: 700px; margin: 0 auto; line-height: 1.6; }
+
+    .faq-wrapper { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem 2rem; }
+
+    /* Search */
+    .faq-search { max-width: 600px; margin: 2rem auto 2rem auto; }
+    .faq-search-input {
+        width: 100%; padding: 18px 24px; border-radius: 16px;
+        background: var(--glass-bg); border: 1px solid var(--glass-border);
+        color: var(--text-color); font-size: 1.1rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: all 0.3s; box-sizing: border-box;
+    }
+    .faq-search-input:focus { outline: none; border-color: var(--accent-color); background: rgba(30, 41, 59, 0.8); }
+
+    /* Category Filters */
+    .faq-filters { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 3rem; }
+    .faq-filter-btn {
+        background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1);
+        padding: 8px 20px; border-radius: 50px; font-size: 0.9rem; font-weight: 600;
+        cursor: pointer; transition: all 0.3s;
+    }
+    .faq-filter-btn:hover, .faq-filter-btn.active {
+        background: var(--accent-color); color: #000; border-color: var(--accent-color);
+        box-shadow: 0 0 15px rgba(240, 165, 0, 0.4);
+    }
+
+    /* Accordion Items */
+    .faq-item {
+        background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px;
+        margin-bottom: 12px; overflow: hidden; transition: all 0.3s;
+    }
+    .faq-item:hover { border-color: rgba(240, 165, 0, 0.3); }
+    .faq-item.active { border-color: var(--accent-color); }
+
+    .faq-question {
+        padding: 1.5rem 2rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+        user-select: none; transition: background 0.3s;
+    }
+    .faq-question:hover { background: rgba(255,255,255,0.02); }
+    .faq-question h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #e2e8f0; line-height: 1.4; flex: 1; padding-right: 15px; }
+    .faq-item.active .faq-question h3 { color: var(--accent-color); }
+
+    .faq-toggle {
+        width: 30px; height: 30px; border-radius: 50%;
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; color: #94a3b8; flex-shrink: 0;
+        transition: all 0.3s;
+    }
+    .faq-item.active .faq-toggle { background: var(--accent-color); color: #000; transform: rotate(45deg); }
+
+    .faq-answer {
+        max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s;
+        padding: 0 2rem;
+    }
+    .faq-item.active .faq-answer {
+        max-height: 300px;
+        padding: 0 2rem 1.5rem 2rem;
+    }
+    .faq-answer p { color: #94a3b8; font-size: 1rem; line-height: 1.8; margin: 0; }
+
+    .faq-category-tag {
+        display: inline-block; padding: 3px 10px; background: rgba(56, 189, 248, 0.1);
+        color: #38bdf8; border-radius: 6px; font-size: 0.7rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;
+    }
+
+    .no-results { text-align: center; padding: 3rem 0; color: #64748b; display: none; }
+    .no-results h3 { font-size: 1.5rem; color: #94a3b8; margin-bottom: 10px; }
+</style>
+
+<div class="faq-header" data-aos="zoom-in">
+    <h1>Frequently Asked Questions.</h1>
+    <p>Everything you need to know about wholesale ordering, shipping, payments, and your account with GrandMark Distributors.</p>
+</div>
+
+<div class="faq-wrapper">
+    <div class="faq-search">
+        <input type="text" id="faqSearch" class="faq-search-input" placeholder="Search questions..." autocomplete="off">
+    </div>
+
+    <div class="faq-filters" id="faqFilters">
+        <button class="faq-filter-btn active" data-cat="All">All</button>
+        <button class="faq-filter-btn" data-cat="Ordering">Ordering</button>
+        <button class="faq-filter-btn" data-cat="Shipping">Shipping</button>
+        <button class="faq-filter-btn" data-cat="Payments">Payments</button>
+        <button class="faq-filter-btn" data-cat="Account">Account</button>
+        <button class="faq-filter-btn" data-cat="General">General</button>
+    </div>
+
+    <div id="faqContainer">
+        <div class="faq-item" data-category="Ordering" data-aos="fade-up" data-aos-delay="50">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Ordering</span><h3>What is the minimum order quantity (MOQ)?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>GrandMark operates on a B2B wholesale model. Minimum order quantities vary by product category but typically start at 10 units per SKU. For bulk industrial orders, contact our procurement team for custom quotes.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="Ordering" data-aos="fade-up" data-aos-delay="70">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Ordering</span><h3>How do I place a wholesale order?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>Browse our Live Inventory catalog, add items to your cart, and proceed to checkout. You'll need to provide your company name and billing email. Your order will be submitted to our Executive Dashboard for processing and M-PESA invoice generation.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="Ordering" data-aos="fade-up" data-aos-delay="90">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Ordering</span><h3>Can I modify or cancel an order after submission?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>Orders in "Pending Processing" status can be cancelled by contacting our admin team. Once an order has been approved and invoiced, modifications require a formal request. Paid orders cannot be cancelled but may qualify for our return policy.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="Shipping" data-aos="fade-up" data-aos-delay="110">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Shipping</span><h3>What regions do you deliver to?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>GrandMark delivers across all of East Africa including Kenya, Uganda, Tanzania, Rwanda, and Burundi. For international shipments beyond East Africa, we coordinate through our network of 48 global port alliances.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="Shipping" data-aos="fade-up" data-aos-delay="130">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Shipping</span><h3>How long does delivery take?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>Warehouse-ready items within Nairobi ship within 24-48 hours. Cross-border East African deliveries take 3-7 business days. International ocean freight typically takes 14-28 days depending on the origin port. Air cargo charters can deliver within 72 hours globally.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="Shipping" data-aos="fade-up" data-aos-delay="150">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Shipping</span><h3>Can I track my order?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>Yes! Use our <a href="/track" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">Order Tracking</a> page. Enter your order ID (e.g., GMK-003) to see real-time status updates from submission through dispatch.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="Payments" data-aos="fade-up" data-aos-delay="170">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Payments</span><h3>What payment methods do you accept?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>Our primary B2B payment channel is M-PESA via the Safaricom Daraja API. Once your order is approved by our admin team, you can clear the invoice directly from your Client Dashboard using M-PESA's STK Push system.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="Payments" data-aos="fade-up" data-aos-delay="190">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Payments</span><h3>When do I receive my invoice?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>A proforma invoice PDF is generated automatically when your order is approved by our executive team. It is emailed directly to your registered billing address and also available in your Client Dashboard.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="Payments" data-aos="fade-up" data-aos-delay="210">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Payments</span><h3>Do you offer credit terms or net-30 billing?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>Credit terms are available for established clients with a strong transaction history. New clients must prepay via M-PESA for the first 3-6 months. Contact our finance team to apply for net-30 or net-60 terms.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="Account" data-aos="fade-up" data-aos-delay="230">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Account</span><h3>How do I create a client account?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>Visit the <a href="/client_portal" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">Client Portal</a> and click "Apply for an Account." You'll need your registered business name and email. A 6-digit verification code will be sent to your email for account activation.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="Account" data-aos="fade-up" data-aos-delay="250">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Account</span><h3>How do I become a GrandMark supplier?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>Visit the <a href="/supplier_portal" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">Supplier Portal</a> and submit an application. Alternatively, our admin team can provision your account directly. Approved suppliers gain access to the B2B inventory injection terminal.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="Account" data-aos="fade-up" data-aos-delay="270">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">Account</span><h3>I didn't receive my OTP verification code. What do I do?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>Check your spam/junk folder first. OTP codes are sent from our system email. If you still don't see it, try registering again with the same email address to trigger a new code. The code expires after 10 minutes.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="General" data-aos="fade-up" data-aos-delay="290">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">General</span><h3>Where is GrandMark headquartered?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>Our corporate headquarters are in Nairobi, Kenya, with our primary freight-clearing mega-hub at the Port of Mombasa. We operate 15 regional distribution centers across East Africa.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="General" data-aos="fade-up" data-aos-delay="310">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">General</span><h3>Do you handle hazardous materials?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>Yes. GrandMark is IMDG certified for the handling and transport of dangerous goods, including chemicals, industrial fuels, and biohazard materials. We maintain ISO-certified Hazmat transit containers and specialized driver training programs.</p></div>
+        </div>
+
+        <div class="faq-item" data-category="General" data-aos="fade-up" data-aos-delay="330">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div><span class="faq-category-tag">General</span><h3>What makes GrandMark different from other logistics providers?</h3></div>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer"><p>We control the entire supply chain end-to-end. Unlike freight brokers, we own our fleet, our warehouses, and our port clearing infrastructure. This means fewer handoffs, faster transit, lower costs, and complete transparency from factory floor to retail shelf.</p></div>
+        </div>
+    </div>
+
+    <div class="no-results" id="noResults">
+        <h3>No matching questions found.</h3>
+        <p>Try a different search term or browse all categories.</p>
+    </div>
+</div>
+
+<script>
+    function toggleFAQ(el) {
+        const item = el.parentElement;
+        const wasActive = item.classList.contains('active');
+        // Close all items
+        document.querySelectorAll('.faq-item.active').forEach(i => i.classList.remove('active'));
+        // Open clicked item if it wasn't already open
+        if (!wasActive) item.classList.add('active');
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const items = document.querySelectorAll('.faq-item');
+        const searchInput = document.getElementById('faqSearch');
+        const filterBtns = document.querySelectorAll('.faq-filter-btn');
+        const noResults = document.getElementById('noResults');
+        let activeCategory = 'All';
+
+        function filterFAQs() {
+            const term = searchInput.value.toLowerCase();
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                const category = item.getAttribute('data-category');
+                const matchesSearch = text.includes(term);
+                const matchesCategory = activeCategory === 'All' || category === activeCategory;
+
+                if (matchesSearch && matchesCategory) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        searchInput.addEventListener('keyup', filterFAQs);
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeCategory = btn.getAttribute('data-cat');
+                filterFAQs();
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Trusted Partners | GrandMark{% endblock %}
+
+{% block content %}
+<style>
+    .test-header { text-align: center; padding: 6rem 1rem 3rem 1rem; }
+    .test-header h1 { font-size: 4rem; font-weight: 900; color: var(--text-color); margin-bottom: 1rem; letter-spacing: -1px; }
+    .test-header p { color: #94a3b8; font-size: 1.2rem; max-width: 700px; margin: 0 auto; line-height: 1.6; }
+
+    .test-wrapper { max-width: 1300px; margin: 0 auto; padding: 0 2rem 6rem 2rem; }
+
+    /* Trust Signals Strip */
+    .trust-strip {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 5rem;
+    }
+    .trust-box {
+        background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px;
+        padding: 2.5rem 1.5rem; text-align: center; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .trust-box:hover { transform: translateY(-5px) scale(1.02); border-color: var(--accent-color); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+    .trust-val { font-size: 3rem; font-weight: 900; color: var(--accent-color); margin-bottom: 5px; }
+    .trust-lbl { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+
+    /* Partner Grid */
+    .partner-section-title { text-align: center; margin-bottom: 3rem; }
+    .partner-section-title h2 { font-size: 2.5rem; font-weight: 900; color: #fff; margin-bottom: 10px; }
+    .partner-section-title p { color: #94a3b8; font-size: 1.1rem; }
+
+    .partner-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-bottom: 5rem;
+    }
+
+    .partner-card {
+        background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px;
+        padding: 2.5rem; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex; flex-direction: column;
+    }
+    .partner-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        border-color: rgba(56, 189, 248, 0.5);
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 25px rgba(56, 189, 248, 0.1);
+        z-index: 10;
+    }
+
+    .partner-icon {
+        width: 60px; height: 60px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 14px; display: flex; justify-content: center; align-items: center;
+        font-size: 1.8rem; margin-bottom: 1.5rem; transition: all 0.4s ease;
+    }
+    .partner-card:hover .partner-icon {
+        background: var(--accent-color); color: #000; transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 0 15px rgba(240, 165, 0, 0.4);
+    }
+
+    .partner-name { font-size: 1.3rem; font-weight: 800; color: #fff; margin: 0 0 5px 0; }
+    .partner-industry { color: var(--accent-color); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.2rem; }
+
+    .partner-quote {
+        color: #cbd5e1; font-size: 1rem; line-height: 1.7; font-style: italic;
+        position: relative; padding-left: 20px;
+        border-left: 3px solid rgba(240, 165, 0, 0.3);
+    }
+
+    .partner-attribution { margin-top: auto; padding-top: 1.5rem; color: #64748b; font-size: 0.9rem; font-weight: 600; }
+
+    /* Certifications Strip */
+    .cert-section { text-align: center; margin: 3rem 0 2rem 0; }
+    .cert-section h2 { font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 2rem; }
+    .cert-grid { display: flex; justify-content: center; flex-wrap: wrap; gap: 1.5rem; }
+    .cert-badge {
+        background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px;
+        padding: 1.5rem 2.5rem; text-align: center; transition: all 0.3s;
+    }
+    .cert-badge:hover { border-color: var(--accent-color); transform: translateY(-3px); }
+    .cert-badge .cert-icon { font-size: 2rem; margin-bottom: 8px; display: block; }
+    .cert-badge .cert-name { color: #cbd5e1; font-size: 0.9rem; font-weight: 700; }
+
+    @media (max-width: 1000px) {
+        .trust-strip { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+        .trust-strip { grid-template-columns: 1fr; }
+        .partner-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="test-header" data-aos="zoom-in">
+    <h1>Trusted by Industry Leaders.</h1>
+    <p>GrandMark Distributors powers the supply chains of Africa's most ambitious enterprises. Here's what our network partners say about us.</p>
+</div>
+
+<div class="test-wrapper">
+
+    <div class="trust-strip">
+        <div class="trust-box" data-aos="fade-up" data-aos-delay="0">
+            <div class="trust-val">11+</div><div class="trust-lbl">Years in Operation</div>
+        </div>
+        <div class="trust-box" data-aos="fade-up" data-aos-delay="100">
+            <div class="trust-val">14</div><div class="trust-lbl">Countries Served</div>
+        </div>
+        <div class="trust-box" data-aos="fade-up" data-aos-delay="200">
+            <div class="trust-val">99.8%</div><div class="trust-lbl">Client Satisfaction</div>
+        </div>
+        <div class="trust-box" data-aos="fade-up" data-aos-delay="300">
+            <div class="trust-val">5</div><div class="trust-lbl">ISO Certifications</div>
+        </div>
+    </div>
+
+    <div class="partner-section-title" data-aos="fade-up">
+        <h2>What Our Partners Say</h2>
+        <p>Direct testimonials from the businesses that rely on our logistics backbone.</p>
+    </div>
+
+    <div class="partner-grid">
+        <div class="partner-card" data-aos="fade-up" data-aos-delay="50">
+            <div class="partner-icon">🏪</div>
+            <h3 class="partner-name">Nakumatt Holdings</h3>
+            <div class="partner-industry">Retail & FMCG</div>
+            <div class="partner-quote">"GrandMark transformed our restocking pipeline. What used to take 3 weeks from port to shelf now takes 4 days. Their warehouse integration is seamless."</div>
+            <div class="partner-attribution">- Head of Procurement</div>
+        </div>
+
+        <div class="partner-card" data-aos="fade-up" data-aos-delay="100">
+            <div class="partner-icon">🏗️</div>
+            <h3 class="partner-name">Bamburi Cement</h3>
+            <div class="partner-industry">Industrial & Construction</div>
+            <div class="partner-quote">"Moving 50,000+ tons of heavy cargo annually requires a partner you can trust completely. GrandMark has never missed a delivery window in 6 years of partnership."</div>
+            <div class="partner-attribution">- VP Logistics</div>
+        </div>
+
+        <div class="partner-card" data-aos="fade-up" data-aos-delay="150">
+            <div class="partner-icon">💊</div>
+            <h3 class="partner-name">MedPharm East Africa</h3>
+            <div class="partner-industry">Pharmaceuticals & Cold Chain</div>
+            <div class="partner-quote">"Their cold chain infrastructure is world-class. Temperature-sensitive vaccines and biologics arrive in perfect condition every single time. Zero spoilage in 3 years."</div>
+            <div class="partner-attribution">- Director of Operations</div>
+        </div>
+
+        <div class="partner-card" data-aos="fade-up" data-aos-delay="200">
+            <div class="partner-icon">📱</div>
+            <h3 class="partner-name">TechZone Distributors</h3>
+            <div class="partner-industry">Consumer Electronics</div>
+            <div class="partner-quote">"We source smartphones and laptops from 3 continents. GrandMark consolidates everything into one shipment and handles customs like clockwork. Incredible efficiency."</div>
+            <div class="partner-attribution">- CEO</div>
+        </div>
+
+        <div class="partner-card" data-aos="fade-up" data-aos-delay="250">
+            <div class="partner-icon">🌾</div>
+            <h3 class="partner-name">Unga Group Limited</h3>
+            <div class="partner-industry">Agriculture & Food Processing</div>
+            <div class="partner-quote">"Cross-border grain shipments used to be a nightmare. GrandMark's border-clearing team reduced our transit delays by 70% across the Kenya-Uganda-Rwanda corridor."</div>
+            <div class="partner-attribution">- Supply Chain Manager</div>
+        </div>
+
+        <div class="partner-card" data-aos="fade-up" data-aos-delay="300">
+            <div class="partner-icon">⚡</div>
+            <h3 class="partner-name">SolarGrid Kenya</h3>
+            <div class="partner-industry">Renewable Energy</div>
+            <div class="partner-quote">"We import oversized solar panel arrays and industrial inverters. GrandMark's project cargo team handled flat-rack containers and heavy-lift rigging flawlessly."</div>
+            <div class="partner-attribution">- Founder & CTO</div>
+        </div>
+
+        <div class="partner-card" data-aos="fade-up" data-aos-delay="350">
+            <div class="partner-icon">👗</div>
+            <h3 class="partner-name">Viva Fashion Group</h3>
+            <div class="partner-industry">Textiles & Apparel</div>
+            <div class="partner-quote">"Fast fashion requires fast logistics. GrandMark's air cargo charter service gets our seasonal collections from Asian factories to Nairobi boutiques in under 72 hours."</div>
+            <div class="partner-attribution">- Managing Director</div>
+        </div>
+
+        <div class="partner-card" data-aos="fade-up" data-aos-delay="400">
+            <div class="partner-icon">🏥</div>
+            <h3 class="partner-name">Aga Khan Health Services</h3>
+            <div class="partner-industry">Healthcare & Medical Equipment</div>
+            <div class="partner-quote">"Importing specialized medical equipment demands precision and compliance. GrandMark's customs brokerage team navigated KRA regulations effortlessly for our MRI shipments."</div>
+            <div class="partner-attribution">- Procurement Director</div>
+        </div>
+    </div>
+
+    <div class="cert-section" data-aos="fade-up">
+        <h2>Certifications & Compliance</h2>
+        <div class="cert-grid">
+            <div class="cert-badge">
+                <span class="cert-icon">🛡️</span>
+                <span class="cert-name">ISO 9001:2015</span>
+            </div>
+            <div class="cert-badge">
+                <span class="cert-icon">🌍</span>
+                <span class="cert-name">ISO 14001</span>
+            </div>
+            <div class="cert-badge">
+                <span class="cert-icon">❄️</span>
+                <span class="cert-name">GDP Compliant</span>
+            </div>
+            <div class="cert-badge">
+                <span class="cert-icon">☣️</span>
+                <span class="cert-name">IMDG Certified</span>
+            </div>
+            <div class="cert-badge">
+                <span class="cert-icon">✈️</span>
+                <span class="cert-name">IATA Accredited</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
