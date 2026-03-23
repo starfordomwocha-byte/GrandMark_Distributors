@@ -1,196 +1,189 @@
 from app import app, db, Product, Ledger
 
-# --- THE GRANDMARK GLOBAL MASTER INVENTORY (160+ ITEMS) ---
+# --- THE GRANDMARK GLOBAL MASTER INVENTORY: KENYAN EDITION (115+ ITEMS) ---
 master_b2b_inventory = [
     # =========================================================
-    # --- ORIGINAL FMCG & GROCERY CATALOG ---
+    # --- CEREALS, FLOURS & DRY GRAINS ---
     # =========================================================
-
-    # --- CATEGORY: CEREALS, FLOURS & DRY GRAINS ---
-    {"name": "Premium Maize Flour (Bale: 12 x 2kg)", "sku": "DRY-MZ-2K12", "category": "Dry Groceries", "unit_cost": 2100.00, "stock_quantity": 850},
-    {"name": "Fortified Maize Meal (Bale: 24 x 1kg)", "sku": "DRY-MZ-1K24", "category": "Dry Groceries", "unit_cost": 2200.00, "stock_quantity": 420},
-    {"name": "All-Purpose Wheat Flour (Bale: 12 x 2kg)", "sku": "DRY-WH-2K12", "category": "Dry Groceries", "unit_cost": 2250.00, "stock_quantity": 620},
-    {"name": "Atta Mark 1 Wheat Flour (Bale: 12 x 2kg)", "sku": "DRY-WH-AT2K", "category": "Dry Groceries", "unit_cost": 2350.00, "stock_quantity": 180},
-    {"name": "Pure Mwea Pishori Rice (Sack: 25kg)", "sku": "DRY-RC-P25K", "category": "Dry Groceries", "unit_cost": 4800.00, "stock_quantity": 340},
-    {"name": "Long Grain Basmati Rice (Sack: 50kg)", "sku": "DRY-RC-B50K", "category": "Dry Groceries", "unit_cost": 8500.00, "stock_quantity": 110},
-    {"name": "Biryani Blended Rice (Sack: 25kg)", "sku": "DRY-RC-BR25", "category": "Dry Groceries", "unit_cost": 4200.00, "stock_quantity": 85},
-    {"name": "Refined White Sugar (Bale: 20 x 1kg)", "sku": "DRY-SG-W1K20", "category": "Dry Groceries", "unit_cost": 2900.00, "stock_quantity": 1200},
-    {"name": "Brown Cane Sugar (Bale: 20 x 1kg)", "sku": "DRY-SG-B1K20", "category": "Dry Groceries", "unit_cost": 3100.00, "stock_quantity": 850},
-    {"name": "Dried Rosecoco Beans (Sack: 90kg)", "sku": "DRY-BN-R90K", "category": "Dry Groceries", "unit_cost": 12500.00, "stock_quantity": 45},
-    {"name": "Wairimu Red Beans (Sack: 90kg)", "sku": "DRY-BN-W90K", "category": "Dry Groceries", "unit_cost": 11800.00, "stock_quantity": 30},
-    {"name": "Dried Green Grams / Ndengu (Sack: 50kg)", "sku": "DRY-GR-G50K", "category": "Dry Groceries", "unit_cost": 8200.00, "stock_quantity": 60},
-    {"name": "Black Beans / Njahi (Sack: 50kg)", "sku": "DRY-BN-NJ50", "category": "Dry Groceries", "unit_cost": 9500.00, "stock_quantity": 25},
-    {"name": "Spaghetti Pasta (Carton: 40 x 400g)", "sku": "DRY-PS-S400", "category": "Dry Groceries", "unit_cost": 3200.00, "stock_quantity": 410},
-    {"name": "Macaroni Pasta (Carton: 40 x 400g)", "sku": "DRY-PS-M400", "category": "Dry Groceries", "unit_cost": 3200.00, "stock_quantity": 280},
-    {"name": "Iodized Table Salt (Bale: 40 x 500g)", "sku": "DRY-SL-T500", "category": "Dry Groceries", "unit_cost": 1500.00, "stock_quantity": 950},
-
-    # --- CATEGORY: SPICES, SAUCES & CONDIMENTS ---
-    {"name": "Tomato Paste (Carton: 50 x 70g tins)", "sku": "CND-TM-P70G", "category": "Spices & Condiments", "unit_cost": 1800.00, "stock_quantity": 310},
-    {"name": "Tomato Sauce / Ketchup (Carton: 12 x 500g)", "sku": "CND-TM-S500", "category": "Spices & Condiments", "unit_cost": 2100.00, "stock_quantity": 450},
-    {"name": "Chilli Sauce (Carton: 12 x 250ml)", "sku": "CND-CH-S250", "category": "Spices & Condiments", "unit_cost": 1600.00, "stock_quantity": 280},
-    {"name": "Beef Flavor Seasoning Cubes (Box: 100 pcs)", "sku": "CND-SP-BF100", "category": "Spices & Condiments", "unit_cost": 450.00, "stock_quantity": 1200},
-    {"name": "Chicken Flavor Seasoning Cubes (Box: 100 pcs)", "sku": "CND-SP-CH100", "category": "Spices & Condiments", "unit_cost": 450.00, "stock_quantity": 1100},
-    {"name": "Dark Soy Sauce (Carton: 12 x 700ml)", "sku": "CND-SY-D700", "category": "Spices & Condiments", "unit_cost": 3400.00, "stock_quantity": 150},
-    {"name": "White Vinegar (Carton: 12 x 700ml)", "sku": "CND-VN-W700", "category": "Spices & Condiments", "unit_cost": 1900.00, "stock_quantity": 180},
-    {"name": "Curry Powder (Carton: 24 x 100g)", "sku": "CND-SP-CR100", "category": "Spices & Condiments", "unit_cost": 2200.00, "stock_quantity": 340},
-    {"name": "Pilau Masala (Carton: 24 x 100g)", "sku": "CND-SP-PM100", "category": "Spices & Condiments", "unit_cost": 2400.00, "stock_quantity": 290},
-
-    # --- CATEGORY: COOKING OILS & FATS ---
-    {"name": "Pure Vegetable Cooking Oil (20L Jerrican)", "sku": "OIL-VG-20L", "category": "Oils & Fats", "unit_cost": 4600.00, "stock_quantity": 320},
-    {"name": "Pure Vegetable Cooking Oil (Carton: 12 x 1L)", "sku": "OIL-VG-1L12", "category": "Oils & Fats", "unit_cost": 3400.00, "stock_quantity": 580},
-    {"name": "Triple Refined Sunflower Oil (Carton: 12 x 1L)", "sku": "OIL-SF-1L12", "category": "Oils & Fats", "unit_cost": 3800.00, "stock_quantity": 18},
-    {"name": "Corn Oil (Carton: 6 x 3L)", "sku": "OIL-CR-3L6", "category": "Oils & Fats", "unit_cost": 5400.00, "stock_quantity": 140},
-    {"name": "Solid Cooking Fat (Carton: 12 x 1kg)", "sku": "FAT-SL-1K12", "category": "Oils & Fats", "unit_cost": 3200.00, "stock_quantity": 560},
-    {"name": "Solid Cooking Fat (Carton: 24 x 500g)", "sku": "FAT-SL-500G24", "category": "Oils & Fats", "unit_cost": 3400.00, "stock_quantity": 410},
-    {"name": "Premium Margarine Spread (Carton: 24 x 500g)", "sku": "FAT-MG-500G24", "category": "Oils & Fats", "unit_cost": 4800.00, "stock_quantity": 0}, 
-    {"name": "Baking Margarine (Carton: 12 x 1kg)", "sku": "FAT-MG-BK1K", "category": "Oils & Fats", "unit_cost": 4500.00, "stock_quantity": 80},
-
-    # --- CATEGORY: DAIRY & BREAKFAST ---
-    {"name": "Whole UHT Long Life Milk (Carton: 12 x 500ml)", "sku": "DRY-ML-W500", "category": "Dairy & Breakfast", "unit_cost": 650.00, "stock_quantity": 2500},
-    {"name": "Semi-Skimmed UHT Milk (Carton: 12 x 500ml)", "sku": "DRY-ML-S500", "category": "Dairy & Breakfast", "unit_cost": 650.00, "stock_quantity": 1100},
-    {"name": "Evaporated Milk Tins (Carton: 48 x 170g)", "sku": "DRY-ML-E170", "category": "Dairy & Breakfast", "unit_cost": 5200.00, "stock_quantity": 210},
-    {"name": "Sweetened Condensed Milk (Carton: 24 x 395g)", "sku": "DRY-ML-C395", "category": "Dairy & Breakfast", "unit_cost": 4800.00, "stock_quantity": 140},
-    {"name": "Vanilla Yoghurt Cups (Carton: 24 x 250ml)", "sku": "DRY-YG-VN250", "category": "Dairy & Breakfast", "unit_cost": 1600.00, "stock_quantity": 380},
-    {"name": "Oatmeal Porridge Oats (Carton: 12 x 500g)", "sku": "BRK-OT-500G", "category": "Dairy & Breakfast", "unit_cost": 3600.00, "stock_quantity": 180},
-    {"name": "Corn Flakes Cereal (Carton: 12 x 500g)", "sku": "BRK-CR-CF500", "category": "Dairy & Breakfast", "unit_cost": 4200.00, "stock_quantity": 320},
-    {"name": "Peanut Butter (Carton: 12 x 400g)", "sku": "BRK-SP-PB400", "category": "Dairy & Breakfast", "unit_cost": 3800.00, "stock_quantity": 14}, 
-    {"name": "Fruit Jam - Mixed Berry (Carton: 12 x 500g)", "sku": "BRK-SP-JM500", "category": "Dairy & Breakfast", "unit_cost": 3400.00, "stock_quantity": 290},
-    {"name": "Natural Pure Honey (Carton: 12 x 500g)", "sku": "BRK-SP-HN500", "category": "Dairy & Breakfast", "unit_cost": 7200.00, "stock_quantity": 95},
-
-    # --- CATEGORY: BEVERAGES (HOT & COLD) ---
-    {"name": "Premium Black Tea Bags (Carton: 24 x 100s)", "sku": "BEV-HT-TB100", "category": "Beverages", "unit_cost": 5500.00, "stock_quantity": 450},
-    {"name": "Loose Leaf Tea PF1 (Bale: 20 x 500g)", "sku": "BEV-HT-LL500", "category": "Beverages", "unit_cost": 6200.00, "stock_quantity": 380},
-    {"name": "Instant Coffee Powder (Carton: 12 x 250g)", "sku": "BEV-HT-CF250", "category": "Beverages", "unit_cost": 8400.00, "stock_quantity": 120},
-    {"name": "Drinking Chocolate Powder (Carton: 12 x 400g)", "sku": "BEV-HT-DC400", "category": "Beverages", "unit_cost": 4800.00, "stock_quantity": 210},
-    {"name": "Carbonated Cola Sodas (Pallet: 50 Crates x 300ml)", "sku": "BEV-CL-SDA50", "category": "Beverages", "unit_cost": 45000.00, "stock_quantity": 35},
-    {"name": "Carbonated Lemon Soda (Pallet: 50 Crates x 300ml)", "sku": "BEV-CL-SDL50", "category": "Beverages", "unit_cost": 45000.00, "stock_quantity": 28},
-    {"name": "Orange Fruit Juice (Carton: 12 x 1L)", "sku": "BEV-CL-OJ1L", "category": "Beverages", "unit_cost": 1800.00, "stock_quantity": 650},
-    {"name": "Tropical Blend Juice (Carton: 12 x 1L)", "sku": "BEV-CL-TJ1L", "category": "Beverages", "unit_cost": 1800.00, "stock_quantity": 540},
-    {"name": "Purified Mineral Water (Carton: 24 x 500ml)", "sku": "BEV-CL-WTR500", "category": "Beverages", "unit_cost": 600.00, "stock_quantity": 3200},
-    {"name": "Purified Mineral Water (Carton: 12 x 1.5L)", "sku": "BEV-CL-WTR15", "category": "Beverages", "unit_cost": 750.00, "stock_quantity": 1800},
-    {"name": "Energy Drink Cans (Carton: 24 x 250ml)", "sku": "BEV-CL-NRG250", "category": "Beverages", "unit_cost": 3200.00, "stock_quantity": 0}, 
-    {"name": "Isotonic Sports Drink (Carton: 12 x 500ml)", "sku": "BEV-CL-SPO500", "category": "Beverages", "unit_cost": 1400.00, "stock_quantity": 310},
-
-    # --- CATEGORY: FROZEN FOODS & BULK MEAT ---
-    {"name": "Frozen Whole Chicken (Carton: 10 x 1.2kg)", "sku": "FRZ-MT-CH12", "category": "Frozen Foods", "unit_cost": 5500.00, "stock_quantity": 85},
-    {"name": "Premium Beef Sausages (Carton: 20 x 400g)", "sku": "FRZ-MT-BS400", "category": "Frozen Foods", "unit_cost": 6200.00, "stock_quantity": 110},
-    {"name": "Frozen French Fries / Chips (Carton: 4 x 2.5kg)", "sku": "FRZ-VG-FF25", "category": "Frozen Foods", "unit_cost": 2800.00, "stock_quantity": 240},
-    {"name": "Frozen Mixed Vegetables (Carton: 10 x 1kg)", "sku": "FRZ-VG-MX1K", "category": "Frozen Foods", "unit_cost": 2500.00, "stock_quantity": 160},
-    {"name": "Vanilla Ice Cream Tubs (Carton: 6 x 2L)", "sku": "FRZ-DS-IC2L", "category": "Frozen Foods", "unit_cost": 4200.00, "stock_quantity": 75},
-
-    # --- CATEGORY: SNACKS & CONFECTIONERY ---
-    {"name": "Potato Crisps - Salted (Carton: 48 x 50g)", "sku": "SNK-CR-SLT50", "category": "Snacks & Sweets", "unit_cost": 2400.00, "stock_quantity": 420},
-    {"name": "Potato Crisps - Onion & Cheese (Carton: 48 x 50g)", "sku": "SNK-CR-ON50", "category": "Snacks & Sweets", "unit_cost": 2400.00, "stock_quantity": 380},
-    {"name": "Digestive Biscuits (Carton: 24 x 400g)", "sku": "SNK-BS-DG400", "category": "Snacks & Sweets", "unit_cost": 3600.00, "stock_quantity": 310},
-    {"name": "Cream Sandwich Biscuits (Carton: 48 x 150g)", "sku": "SNK-BS-CR150", "category": "Snacks & Sweets", "unit_cost": 2800.00, "stock_quantity": 550},
-    {"name": "Milk Chocolate Bars (Display Box: 24 x 50g)", "sku": "SNK-CH-MLK50", "category": "Snacks & Sweets", "unit_cost": 1800.00, "stock_quantity": 12}, 
-    {"name": "Peppermint Chewing Gum (Display Box: 30 pks)", "sku": "SNK-GM-MNT30", "category": "Snacks & Sweets", "unit_cost": 1200.00, "stock_quantity": 800},
-    {"name": "Assorted Fruit Lollipops (Display Jar: 100 pcs)", "sku": "SNK-SW-LP100", "category": "Snacks & Sweets", "unit_cost": 500.00, "stock_quantity": 650},
-    {"name": "Roasted Peanuts (Carton: 48 x 100g)", "sku": "SNK-NT-RST100", "category": "Snacks & Sweets", "unit_cost": 3200.00, "stock_quantity": 240},
-    {"name": "Raw Popcorn Kernels (Sack: 50kg)", "sku": "SNK-PC-RW50K", "category": "Snacks & Sweets", "unit_cost": 6500.00, "stock_quantity": 40},
-
-    # --- CATEGORY: HOME CARE & CLEANING ---
-    {"name": "Multi-Purpose Washing Powder (Sack: 10kg)", "sku": "CLN-PW-MP10", "category": "Home Cleaning", "unit_cost": 2500.00, "stock_quantity": 450},
-    {"name": "Machine Wash Detergent (Carton: 6 x 2kg)", "sku": "CLN-PW-MW2K", "category": "Home Cleaning", "unit_cost": 3800.00, "stock_quantity": 180},
-    {"name": "Liquid Dishwashing Soap (Carton: 12 x 1L)", "sku": "CLN-LQ-DW1L", "category": "Home Cleaning", "unit_cost": 2100.00, "stock_quantity": 320},
-    {"name": "All-Purpose Bar Soap (Carton: 25 x 800g)", "sku": "CLN-BR-AP800", "category": "Home Cleaning", "unit_cost": 3500.00, "stock_quantity": 600},
-    {"name": "Toilet Tissue Paper (Bale: 40 Rolls, 2-Ply)", "sku": "CLN-PP-TT40", "category": "Home Cleaning", "unit_cost": 1200.00, "stock_quantity": 1500},
-    {"name": "Kitchen Paper Towels (Bale: 24 Rolls)", "sku": "CLN-PP-KT24", "category": "Home Cleaning", "unit_cost": 1800.00, "stock_quantity": 420},
-    {"name": "Bleach / Disinfectant (Carton: 12 x 750ml)", "sku": "CLN-LQ-BL750", "category": "Home Cleaning", "unit_cost": 1800.00, "stock_quantity": 280},
-    {"name": "Pine Floor Cleaner (Carton: 12 x 1L)", "sku": "CLN-LQ-FL1L", "category": "Home Cleaning", "unit_cost": 2400.00, "stock_quantity": 190},
-    {"name": "Toilet Bowl Cleaner Liquid (Carton: 12 x 500ml)", "sku": "CLN-LQ-TB500", "category": "Home Cleaning", "unit_cost": 2100.00, "stock_quantity": 220},
-    {"name": "Aerosol Air Freshener (Carton: 24 x 300ml)", "sku": "CLN-AR-AF300", "category": "Home Cleaning", "unit_cost": 4200.00, "stock_quantity": 8}, 
-    {"name": "Insecticide Spray (Carton: 24 x 400ml)", "sku": "CLN-AR-IN400", "category": "Home Cleaning", "unit_cost": 6500.00, "stock_quantity": 150},
-    {"name": "Steel Wool Scouring Pads (Bale: 100 pcs)", "sku": "CLN-HW-SW100", "category": "Home Cleaning", "unit_cost": 1500.00, "stock_quantity": 400},
-    {"name": "Sponge Scourers (Carton: 48 pcs)", "sku": "CLN-HW-SP48", "category": "Home Cleaning", "unit_cost": 1200.00, "stock_quantity": 350},
-
-    # --- CATEGORY: PERSONAL CARE & HYGIENE ---
-    {"name": "Antibacterial Bath Soap (Carton: 48 x 175g)", "sku": "BTY-SP-AB175", "category": "Personal Care", "unit_cost": 4800.00, "stock_quantity": 520},
-    {"name": "Moisturizing Beauty Bar (Carton: 48 x 175g)", "sku": "BTY-SP-MB175", "category": "Personal Care", "unit_cost": 5200.00, "stock_quantity": 340},
-    {"name": "Liquid Hand Wash Pump (Carton: 12 x 500ml)", "sku": "BTY-LQ-HW500", "category": "Personal Care", "unit_cost": 3200.00, "stock_quantity": 180},
-    {"name": "Fluoride Toothpaste (Carton: 36 x 100g)", "sku": "BTY-OR-TP100", "category": "Personal Care", "unit_cost": 3600.00, "stock_quantity": 610},
-    {"name": "Adult Toothbrushes (Display Box: 48 units)", "sku": "BTY-OR-TB48", "category": "Personal Care", "unit_cost": 2400.00, "stock_quantity": 280},
-    {"name": "Petroleum Jelly (Carton: 24 x 250g)", "sku": "BTY-SK-PJ250", "category": "Personal Care", "unit_cost": 2800.00, "stock_quantity": 450},
-    {"name": "Cocoa Butter Body Lotion (Carton: 12 x 400ml)", "sku": "BTY-SK-CB400", "category": "Personal Care", "unit_cost": 4200.00, "stock_quantity": 210},
-    {"name": "Anti-Dandruff Shampoo (Carton: 12 x 400ml)", "sku": "BTY-HR-SH400", "category": "Personal Care", "unit_cost": 4800.00, "stock_quantity": 180},
-    {"name": "Men's Roll-On Deodorant (Carton: 24 x 50ml)", "sku": "BTY-BD-MR50", "category": "Personal Care", "unit_cost": 5400.00, "stock_quantity": 2}, 
-    {"name": "Women's Body Spray (Carton: 24 x 150ml)", "sku": "BTY-BD-WS150", "category": "Personal Care", "unit_cost": 6200.00, "stock_quantity": 140},
-    {"name": "Sanitary Pads - Normal (Carton: 24 packs x 8s)", "sku": "BTY-FH-SP8", "category": "Personal Care", "unit_cost": 2200.00, "stock_quantity": 580},
-    {"name": "Cotton Wool Rolls (Bale: 24 x 100g)", "sku": "BTY-CW-R100", "category": "Personal Care", "unit_cost": 1800.00, "stock_quantity": 310},
-    {"name": "Disposable Twin-Blade Razors (Display Card: 24s)", "sku": "BTY-RZ-T24", "category": "Personal Care", "unit_cost": 900.00, "stock_quantity": 850},
-
-    # --- CATEGORY: BABY CARE ---
-    {"name": "Disposable Diapers - Size 3 (Bale: 4 x 40s)", "sku": "BBY-DP-SZ3", "category": "Baby Care", "unit_cost": 3800.00, "stock_quantity": 320},
-    {"name": "Disposable Diapers - Size 4 (Bale: 4 x 36s)", "sku": "BBY-DP-SZ4", "category": "Baby Care", "unit_cost": 3800.00, "stock_quantity": 290},
-    {"name": "Baby Wet Wipes (Carton: 24 packs x 80s)", "sku": "BBY-WP-80S", "category": "Baby Care", "unit_cost": 3800.00, "stock_quantity": 410},
-    {"name": "Infant Formula Milk Stage 1 (Carton: 12 x 400g)", "sku": "BBY-FD-FM1", "category": "Baby Care", "unit_cost": 12500.00, "stock_quantity": 85},
-    {"name": "Baby Powder (Carton: 24 x 200g)", "sku": "BBY-SK-BP200", "category": "Baby Care", "unit_cost": 4200.00, "stock_quantity": 150},
-    {"name": "Baby Jelly / Vaseline (Carton: 24 x 250g)", "sku": "BBY-SK-VJ250", "category": "Baby Care", "unit_cost": 3100.00, "stock_quantity": 190},
-
-    # --- CATEGORY: PET SUPPLIES ---
-    {"name": "Adult Dog Food - Beef Flavor (Sack: 10kg)", "sku": "PET-DG-BF10", "category": "Pet Supplies", "unit_cost": 3500.00, "stock_quantity": 120},
-    {"name": "Puppy Food - Chicken Flavor (Sack: 5kg)", "sku": "PET-DG-CH5", "category": "Pet Supplies", "unit_cost": 2100.00, "stock_quantity": 90},
-    {"name": "Dry Cat Food - Tuna Flavor (Sack: 5kg)", "sku": "PET-CT-TN5", "category": "Pet Supplies", "unit_cost": 2200.00, "stock_quantity": 80},
-    {"name": "Tinned Dog Meat (Carton: 24 x 400g)", "sku": "PET-DG-TN400", "category": "Pet Supplies", "unit_cost": 4800.00, "stock_quantity": 0}, 
-    {"name": "Clumping Cat Litter (Bag: 5kg)", "sku": "PET-CT-LT5", "category": "Pet Supplies", "unit_cost": 850.00, "stock_quantity": 160},
-
-    # --- CATEGORY: STATIONERY & BASIC HOME ---
-    {"name": "A4 Photocopy Paper (Box: 5 Reams)", "sku": "STN-PP-A4R5", "category": "Stationery & Home", "unit_cost": 3200.00, "stock_quantity": 450},
-    {"name": "Blue Ballpoint Pens (Box: 50 pcs)", "sku": "STN-PN-BL50", "category": "Stationery & Home", "unit_cost": 800.00, "stock_quantity": 600},
-    {"name": "A5 Ruled Exercise Books (Carton: 120 pcs)", "sku": "STN-BK-A5R120", "category": "Stationery & Home", "unit_cost": 4500.00, "stock_quantity": 210},
-    {"name": "1.5L Stainless Steel Electric Kettle", "sku": "APP-KT-15LSS", "category": "Stationery & Home", "unit_cost": 1800.00, "stock_quantity": 65},
-    {"name": "20L Digital Microwave Oven", "sku": "APP-MW-20LDG", "category": "Stationery & Home", "unit_cost": 7500.00, "stock_quantity": 22}, 
-    {"name": "Heavy Duty Dry Iron Box (1000W)", "sku": "APP-IR-1000W", "category": "Stationery & Home", "unit_cost": 1500.00, "stock_quantity": 80},
-    {"name": "Blender with Grinder Mill (1.5L)", "sku": "APP-BL-15LGR", "category": "Stationery & Home", "unit_cost": 2800.00, "stock_quantity": 45},
-    {"name": "Energy Saving LED Bulbs 9W (Carton: 50 pcs)", "sku": "HDW-LT-LED9", "category": "Stationery & Home", "unit_cost": 7500.00, "stock_quantity": 110},
-    {"name": "AA Alkaline Batteries (Display Card: 24 pairs)", "sku": "HDW-BT-AA24", "category": "Stationery & Home", "unit_cost": 2400.00, "stock_quantity": 340},
-    {"name": "Matches (Carton: 10 bundles x 10 boxes)", "sku": "HDW-MT-CH100", "category": "Stationery & Home", "unit_cost": 450.00, "stock_quantity": 850},
+    {"name": "Soko Maize Meal (Bale: 12 x 2kg)", "sku": "DRY-MZ-SK2K12", "category": "Dry Groceries", "buying_price": 1850.00, "unit_cost": 2100.00, "stock_quantity": 850},
+    {"name": "Jogoo Maize Meal (Bale: 12 x 2kg)", "sku": "DRY-MZ-JG2K12", "category": "Dry Groceries", "buying_price": 1900.00, "unit_cost": 2200.00, "stock_quantity": 420},
+    {"name": "Pembe Maize Meal (Bale: 12 x 2kg)", "sku": "DRY-MZ-PM2K12", "category": "Dry Groceries", "buying_price": 1880.00, "unit_cost": 2150.00, "stock_quantity": 500},
+    {"name": "Exe All-Purpose Wheat Flour (Bale: 12 x 2kg)", "sku": "DRY-WH-EX2K12", "category": "Dry Groceries", "buying_price": 2000.00, "unit_cost": 2250.00, "stock_quantity": 620},
+    {"name": "Ajab Wheat Flour (Bale: 12 x 2kg)", "sku": "DRY-WH-AJ2K12", "category": "Dry Groceries", "buying_price": 1980.00, "unit_cost": 2230.00, "stock_quantity": 450},
+    {"name": "Ndovu Atta Mark 1 Flour (Bale: 12 x 2kg)", "sku": "DRY-WH-ND2K12", "category": "Dry Groceries", "buying_price": 2150.00, "unit_cost": 2350.00, "stock_quantity": 180},
+    {"name": "Pearl Mwea Pishori Rice (Sack: 25kg)", "sku": "DRY-RC-PL25K", "category": "Dry Groceries", "buying_price": 4200.00, "unit_cost": 4800.00, "stock_quantity": 340},
+    {"name": "Daawat Long Grain Basmati (Sack: 25kg)", "sku": "DRY-RC-DW25K", "category": "Dry Groceries", "buying_price": 3800.00, "unit_cost": 4500.00, "stock_quantity": 210},
+    {"name": "Ranee Everyday Rice (Sack: 25kg)", "sku": "DRY-RC-RN25K", "category": "Dry Groceries", "buying_price": 2900.00, "unit_cost": 3400.00, "stock_quantity": 500},
+    {"name": "Kabras Premium White Sugar (Bale: 20 x 1kg)", "sku": "DRY-SG-KB1K20", "category": "Dry Groceries", "buying_price": 2500.00, "unit_cost": 2900.00, "stock_quantity": 1200},
+    {"name": "Nutrameal Brown Sugar (Bale: 20 x 1kg)", "sku": "DRY-SG-NT1K20", "category": "Dry Groceries", "buying_price": 2700.00, "unit_cost": 3100.00, "stock_quantity": 850},
+    {"name": "Santa Lucia Spaghetti (Carton: 40 x 400g)", "sku": "DRY-PS-SL400", "category": "Dry Groceries", "buying_price": 2800.00, "unit_cost": 3200.00, "stock_quantity": 410},
+    {"name": "Kensalt Iodized Table Salt (Bale: 40 x 500g)", "sku": "DRY-SL-KS500", "category": "Dry Groceries", "buying_price": 1200.00, "unit_cost": 1500.00, "stock_quantity": 950},
+    {"name": "Nyahururu Green Grams / Ndengu (Sack: 50kg)", "sku": "DRY-BN-ND50K", "category": "Dry Groceries", "buying_price": 6500.00, "unit_cost": 8200.00, "stock_quantity": 60},
+    {"name": "Wairimu Red Beans (Sack: 90kg)", "sku": "DRY-BN-WR90K", "category": "Dry Groceries", "buying_price": 9800.00, "unit_cost": 11800.00, "stock_quantity": 45},
 
     # =========================================================
-    # --- NEW EXPANSION: ELECTRONICS, AUTOMOTIVE & HARDWARE ---
+    # --- SPICES, SAUCES & CONDIMENTS ---
     # =========================================================
+    {"name": "Peptang Tomato Sauce (Carton: 12 x 500g)", "sku": "CND-TM-PT500", "category": "Spices & Condiments", "buying_price": 1750.00, "unit_cost": 2100.00, "stock_quantity": 450},
+    {"name": "Peptang Chilli Sauce (Carton: 12 x 250g)", "sku": "CND-CH-PT250", "category": "Spices & Condiments", "buying_price": 1400.00, "unit_cost": 1650.00, "stock_quantity": 320},
+    {"name": "Heinz Tomato Ketchup (Carton: 12 x 400g)", "sku": "CND-TM-HZ400", "category": "Spices & Condiments", "buying_price": 3100.00, "unit_cost": 3800.00, "stock_quantity": 150},
+    {"name": "Royco Mchuzi Mix - Beef (Carton: 24 x 200g)", "sku": "CND-SP-RYB200", "category": "Spices & Condiments", "buying_price": 3800.00, "unit_cost": 4400.00, "stock_quantity": 1200},
+    {"name": "Royco Mchuzi Mix - Chicken (Carton: 24 x 200g)", "sku": "CND-SP-RYC200", "category": "Spices & Condiments", "buying_price": 3800.00, "unit_cost": 4400.00, "stock_quantity": 900},
+    {"name": "Knorr Beef Cubes (Box: 100 pcs)", "sku": "CND-SP-KNB100", "category": "Spices & Condiments", "buying_price": 350.00, "unit_cost": 450.00, "stock_quantity": 1100},
+    {"name": "Tropical Heat Pilau Masala (Carton: 24 x 100g)", "sku": "CND-SP-THP100", "category": "Spices & Condiments", "buying_price": 2000.00, "unit_cost": 2400.00, "stock_quantity": 290},
+    {"name": "Tropical Heat Curry Powder (Carton: 24 x 100g)", "sku": "CND-SP-THC100", "category": "Spices & Condiments", "buying_price": 1800.00, "unit_cost": 2200.00, "stock_quantity": 310},
+    {"name": "Tropical Heat Tea Masala (Carton: 24 x 100g)", "sku": "CND-SP-THT100", "category": "Spices & Condiments", "buying_price": 2100.00, "unit_cost": 2500.00, "stock_quantity": 180},
 
-    # --- CATEGORY: MOBILE DEVICES & TABLETS ---
-    {"name": "Smartphone Pro Max 256GB (Carton: 10 units)", "sku": "MOB-PM-256G10", "category": "Smartphones & IT", "unit_cost": 1450000.00, "stock_quantity": 12},
-    {"name": "Mid-Range Android 128GB (Carton: 20 units)", "sku": "MOB-AD-128G20", "category": "Smartphones & IT", "unit_cost": 480000.00, "stock_quantity": 45},
-    {"name": "Budget 4G Feature Phones (Carton: 50 units)", "sku": "MOB-FP-4G50", "category": "Smartphones & IT", "unit_cost": 150000.00, "stock_quantity": 80},
-    {"name": "10-Inch Corporate Tablets 64GB (Carton: 10 units)", "sku": "MOB-TB-10IN10", "category": "Smartphones & IT", "unit_cost": 350000.00, "stock_quantity": 30},
+    # =========================================================
+    # --- COOKING OILS & FATS ---
+    # =========================================================
+    {"name": "Fresh Fri Vegetable Oil (20L Jerrican)", "sku": "OIL-VG-FF20L", "category": "Oils & Fats", "buying_price": 4100.00, "unit_cost": 4600.00, "stock_quantity": 320},
+    {"name": "Fresh Fri Vegetable Oil (Carton: 6 x 3L)", "sku": "OIL-VG-FF3L6", "category": "Oils & Fats", "buying_price": 3900.00, "unit_cost": 4400.00, "stock_quantity": 410},
+    {"name": "Golden Fry Cooking Oil (Carton: 12 x 1L)", "sku": "OIL-VG-GF1L12", "category": "Oils & Fats", "buying_price": 2900.00, "unit_cost": 3400.00, "stock_quantity": 580},
+    {"name": "Salit Vegetable Oil (Carton: 12 x 1L)", "sku": "OIL-VG-SL1L12", "category": "Oils & Fats", "buying_price": 2850.00, "unit_cost": 3300.00, "stock_quantity": 400},
+    {"name": "Elianto Pure Corn Oil (Carton: 6 x 3L)", "sku": "OIL-CR-EL3L6", "category": "Oils & Fats", "buying_price": 4800.00, "unit_cost": 5400.00, "stock_quantity": 140},
+    {"name": "Kimbo Solid Cooking Fat (Carton: 12 x 1kg)", "sku": "FAT-SL-KB1K", "category": "Oils & Fats", "buying_price": 2800.00, "unit_cost": 3200.00, "stock_quantity": 560},
+    {"name": "Kimbo Solid Cooking Fat (Carton: 24 x 500g)", "sku": "FAT-SL-KB500", "category": "Oils & Fats", "buying_price": 2950.00, "unit_cost": 3400.00, "stock_quantity": 300},
+    {"name": "Cowboy Cooking Fat (Carton: 12 x 1kg)", "sku": "FAT-SL-CB1K", "category": "Oils & Fats", "buying_price": 2800.00, "unit_cost": 3200.00, "stock_quantity": 250},
+    {"name": "Blue Band Margarine Spread (Carton: 24 x 500g)", "sku": "FAT-MG-BB500", "category": "Oils & Fats", "buying_price": 4200.00, "unit_cost": 4800.00, "stock_quantity": 420}, 
+    {"name": "Blue Band Margarine Spread (Carton: 48 x 250g)", "sku": "FAT-MG-BB250", "category": "Oils & Fats", "buying_price": 4500.00, "unit_cost": 5100.00, "stock_quantity": 380}, 
+    {"name": "Prestige Margarine (Carton: 24 x 500g)", "sku": "FAT-MG-PR500", "category": "Oils & Fats", "buying_price": 3800.00, "unit_cost": 4300.00, "stock_quantity": 150},
 
-    # --- CATEGORY: ENTERPRISE IT & COMPUTING ---
-    {"name": "Corporate Core i7 Laptops 16GB RAM (Pallet: 5 units)", "sku": "CMP-LT-I7P5", "category": "Smartphones & IT", "unit_cost": 650000.00, "stock_quantity": 18},
-    {"name": "Student Edition Celeron Laptops (Pallet: 10 units)", "sku": "CMP-LT-CEL10", "category": "Smartphones & IT", "unit_cost": 320000.00, "stock_quantity": 40},
-    {"name": "Wireless Ergonomic Mouse (Carton: 50 units)", "sku": "CMP-AC-MS50", "category": "Smartphones & IT", "unit_cost": 45000.00, "stock_quantity": 120},
-    {"name": "1TB External Hard Drives (Carton: 20 units)", "sku": "CMP-AC-HD1T20", "category": "Smartphones & IT", "unit_cost": 120000.00, "stock_quantity": 65},
+    # =========================================================
+    # --- DAIRY & BREAKFAST ---
+    # =========================================================
+    {"name": "Brookside Whole UHT Milk (Carton: 12 x 500ml)", "sku": "DRY-ML-BR500", "category": "Dairy & Breakfast", "buying_price": 550.00, "unit_cost": 650.00, "stock_quantity": 2500},
+    {"name": "Brookside Low Fat UHT Milk (Carton: 12 x 500ml)", "sku": "DRY-ML-BRL500", "category": "Dairy & Breakfast", "buying_price": 580.00, "unit_cost": 680.00, "stock_quantity": 800},
+    {"name": "Tuzo Long Life Milk (Carton: 12 x 500ml)", "sku": "DRY-ML-TZ500", "category": "Dairy & Breakfast", "buying_price": 530.00, "unit_cost": 630.00, "stock_quantity": 1100},
+    {"name": "KCC Gold Crown UHT Milk (Carton: 12 x 500ml)", "sku": "DRY-ML-KCC500", "category": "Dairy & Breakfast", "buying_price": 540.00, "unit_cost": 640.00, "stock_quantity": 1500},
+    {"name": "Delamere Vanilla Yoghurt (Carton: 24 x 250ml)", "sku": "DRY-YG-DL250", "category": "Dairy & Breakfast", "buying_price": 1350.00, "unit_cost": 1600.00, "stock_quantity": 380},
+    {"name": "Bio Strawberry Yoghurt (Carton: 12 x 450ml)", "sku": "DRY-YG-BIO450", "category": "Dairy & Breakfast", "buying_price": 1800.00, "unit_cost": 2100.00, "stock_quantity": 250},
+    {"name": "Proctor & Allan Oats (Carton: 12 x 500g)", "sku": "BRK-OT-PA500", "category": "Dairy & Breakfast", "buying_price": 3100.00, "unit_cost": 3600.00, "stock_quantity": 180},
+    {"name": "Weetabix Original Cereal (Carton: 12 x 400g)", "sku": "BRK-CR-WT400", "category": "Dairy & Breakfast", "buying_price": 4800.00, "unit_cost": 5500.00, "stock_quantity": 420},
+    {"name": "Zesta Strawberry Jam (Carton: 12 x 500g)", "sku": "BRK-SP-ZS500", "category": "Dairy & Breakfast", "buying_price": 2900.00, "unit_cost": 3400.00, "stock_quantity": 290},
+    {"name": "Zesta Plum Jam (Carton: 12 x 500g)", "sku": "BRK-SP-ZP500", "category": "Dairy & Breakfast", "buying_price": 2900.00, "unit_cost": 3400.00, "stock_quantity": 210},
+    {"name": "Zesta Peanut Butter (Carton: 12 x 400g)", "sku": "BRK-SP-ZPB400", "category": "Dairy & Breakfast", "buying_price": 3400.00, "unit_cost": 3900.00, "stock_quantity": 320},
 
-    # --- CATEGORY: TELEVISIONS & HOME ENTERTAINMENT ---
-    {"name": "65-Inch 4K UHD Smart TV (Single Unit)", "sku": "TV-65-4KSMT", "category": "Electronics & TVs", "unit_cost": 85000.00, "stock_quantity": 42},
-    {"name": "50-Inch Android Smart TV (Pallet: 4 units)", "sku": "TV-50-ANDP4", "category": "Electronics & TVs", "unit_cost": 172000.00, "stock_quantity": 25},
-    {"name": "32-Inch Frameless Digital TV (Pallet: 10 units)", "sku": "TV-32-DGTP10", "category": "Electronics & TVs", "unit_cost": 125000.00, "stock_quantity": 60},
-    {"name": "Bluetooth Soundbar + Subwoofer (Carton: 5 units)", "sku": "AUD-SB-SUB5", "category": "Electronics & TVs", "unit_cost": 75000.00, "stock_quantity": 35},
+    # =========================================================
+    # --- BEVERAGES (HOT & COLD) ---
+    # =========================================================
+    {"name": "Ketepa Pride Tea Bags (Carton: 24 x 100s)", "sku": "BEV-HT-KT100", "category": "Beverages", "buying_price": 4800.00, "unit_cost": 5500.00, "stock_quantity": 450},
+    {"name": "Kericho Gold Loose Leaf (Bale: 20 x 500g)", "sku": "BEV-HT-KG500", "category": "Beverages", "buying_price": 5400.00, "unit_cost": 6200.00, "stock_quantity": 380},
+    {"name": "Nescafe Classic Coffee (Carton: 12 x 250g)", "sku": "BEV-HT-NS250", "category": "Beverages", "buying_price": 7200.00, "unit_cost": 8400.00, "stock_quantity": 120},
+    {"name": "Milo Energy Drink Powder (Carton: 12 x 400g)", "sku": "BEV-HT-ML400", "category": "Beverages", "buying_price": 5500.00, "unit_cost": 6200.00, "stock_quantity": 250},
+    {"name": "Cadbury Drinking Chocolate (Carton: 12 x 400g)", "sku": "BEV-HT-CD400", "category": "Beverages", "buying_price": 4100.00, "unit_cost": 4800.00, "stock_quantity": 210},
+    {"name": "Coca-Cola Soda (Pallet: 50 Crates x 300ml)", "sku": "BEV-CL-CC50", "category": "Beverages", "buying_price": 38000.00, "unit_cost": 45000.00, "stock_quantity": 35},
+    {"name": "Sprite Soda (Pallet: 50 Crates x 300ml)", "sku": "BEV-CL-SP50", "category": "Beverages", "buying_price": 38000.00, "unit_cost": 45000.00, "stock_quantity": 28},
+    {"name": "Fanta Orange Soda (Pallet: 50 Crates x 300ml)", "sku": "BEV-CL-FO50", "category": "Beverages", "buying_price": 38000.00, "unit_cost": 45000.00, "stock_quantity": 30},
+    {"name": "Afia Tropical Juice (Carton: 12 x 500ml)", "sku": "BEV-CL-AF500", "category": "Beverages", "buying_price": 750.00, "unit_cost": 900.00, "stock_quantity": 650},
+    {"name": "Afia Mango Juice (Carton: 12 x 500ml)", "sku": "BEV-CL-AFM500", "category": "Beverages", "buying_price": 750.00, "unit_cost": 900.00, "stock_quantity": 520},
+    {"name": "Quencher Life Mango (Carton: 12 x 1L)", "sku": "BEV-CL-QM1L", "category": "Beverages", "buying_price": 1400.00, "unit_cost": 1700.00, "stock_quantity": 210},
+    {"name": "Aquamist Mineral Water (Carton: 24 x 500ml)", "sku": "BEV-CL-AQ500", "category": "Beverages", "buying_price": 480.00, "unit_cost": 600.00, "stock_quantity": 3200},
+    {"name": "Dasani Purified Water (Carton: 24 x 500ml)", "sku": "BEV-CL-DS500", "category": "Beverages", "buying_price": 550.00, "unit_cost": 700.00, "stock_quantity": 2100},
+    {"name": "Monster Energy Drink (Carton: 24 x 500ml)", "sku": "BEV-CL-MN500", "category": "Beverages", "buying_price": 3800.00, "unit_cost": 4500.00, "stock_quantity": 140}, 
+    {"name": "Red Bull Energy Drink (Carton: 24 x 250ml)", "sku": "BEV-CL-RB250", "category": "Beverages", "buying_price": 4200.00, "unit_cost": 4800.00, "stock_quantity": 110}, 
 
-    # --- CATEGORY: HEAVY HOUSEHOLD APPLIANCES ---
-    {"name": "Double Door Frost-Free Fridge 400L (Single)", "sku": "APP-FR-DD400", "category": "Heavy Appliances", "unit_cost": 72000.00, "stock_quantity": 28},
-    {"name": "Chest Freezer 250L (Single Unit)", "sku": "APP-FZ-CH250", "category": "Heavy Appliances", "unit_cost": 45000.00, "stock_quantity": 40},
-    {"name": "Front Load Washing Machine 8KG (Single)", "sku": "APP-WM-FL8K", "category": "Heavy Appliances", "unit_cost": 58000.00, "stock_quantity": 32},
-    {"name": "4-Burner Gas Cooker + Electric Oven (Single)", "sku": "APP-CK-4BEO", "category": "Heavy Appliances", "unit_cost": 42000.00, "stock_quantity": 55},
+    # =========================================================
+    # --- FROZEN FOODS & BULK MEAT ---
+    # =========================================================
+    {"name": "Farmer's Choice Beef Sausages (Carton: 20 x 400g)", "sku": "FRZ-MT-FCB400", "category": "Frozen Foods", "buying_price": 5400.00, "unit_cost": 6200.00, "stock_quantity": 110},
+    {"name": "Farmer's Choice Pork Sausages (Carton: 20 x 400g)", "sku": "FRZ-MT-FCP400", "category": "Frozen Foods", "buying_price": 5600.00, "unit_cost": 6400.00, "stock_quantity": 90},
+    {"name": "Farmer's Choice Smokies (Carton: 20 x 500g)", "sku": "FRZ-MT-FCS500", "category": "Frozen Foods", "buying_price": 6000.00, "unit_cost": 6800.00, "stock_quantity": 150},
+    {"name": "Kenchic Frozen Whole Chicken (Carton: 10 x 1.2kg)", "sku": "FRZ-MT-KCWC12", "category": "Frozen Foods", "buying_price": 4600.00, "unit_cost": 5500.00, "stock_quantity": 85},
+    {"name": "Kenchic Chicken Drumsticks (Carton: 10 x 1kg)", "sku": "FRZ-MT-KCD10", "category": "Frozen Foods", "buying_price": 5200.00, "unit_cost": 6000.00, "stock_quantity": 40},
 
-    # --- CATEGORY: AUTOMOTIVE & FLEET VEHICLES ---
-    {"name": "1-Ton Commercial Pickup Truck (Single Unit)", "sku": "AUTO-PU-1TON", "category": "Automotive & Fleet", "unit_cost": 3200000.00, "stock_quantity": 8},
-    {"name": "Standard Logistics Delivery Van (Single Unit)", "sku": "AUTO-VN-DLV1", "category": "Automotive & Fleet", "unit_cost": 2850000.00, "stock_quantity": 12},
-    {"name": "Executive Corporate Sedan (Single Unit)", "sku": "AUTO-SD-EXEC", "category": "Automotive & Fleet", "unit_cost": 4500000.00, "stock_quantity": 4},
-    {"name": "Heavy Duty Truck Tires 295/80R22.5 (Set of 6)", "sku": "AUTO-TR-HDT6", "category": "Automotive & Fleet", "unit_cost": 180000.00, "stock_quantity": 30},
+    # =========================================================
+    # --- SNACKS & CONFECTIONERY ---
+    # =========================================================
+    {"name": "Krackles Potato Crisps - Salted (Carton: 48 x 50g)", "sku": "SNK-CR-KRS50", "category": "Snacks & Sweets", "buying_price": 1900.00, "unit_cost": 2400.00, "stock_quantity": 420},
+    {"name": "Krackles Potato Crisps - Onion (Carton: 48 x 50g)", "sku": "SNK-CR-KRO50", "category": "Snacks & Sweets", "buying_price": 1900.00, "unit_cost": 2400.00, "stock_quantity": 380},
+    {"name": "Tropical Heat Chevda - Mild (Carton: 24 x 200g)", "sku": "SNK-CR-THC200", "category": "Snacks & Sweets", "buying_price": 3200.00, "unit_cost": 3800.00, "stock_quantity": 150},
+    {"name": "NuVita Digestive Biscuits (Carton: 24 x 400g)", "sku": "SNK-BS-NV400", "category": "Snacks & Sweets", "buying_price": 3100.00, "unit_cost": 3600.00, "stock_quantity": 310},
+    {"name": "NuVita Ginger Snaps (Carton: 24 x 200g)", "sku": "SNK-BS-NVG200", "category": "Snacks & Sweets", "buying_price": 2400.00, "unit_cost": 2800.00, "stock_quantity": 280},
+    {"name": "Manji Marie Biscuits (Carton: 48 x 150g)", "sku": "SNK-BS-MJ150", "category": "Snacks & Sweets", "buying_price": 2400.00, "unit_cost": 2800.00, "stock_quantity": 550},
+    {"name": "Cadbury Dairy Milk Chocolate (Display Box: 24 x 50g)", "sku": "SNK-CH-CDM50", "category": "Snacks & Sweets", "buying_price": 1400.00, "unit_cost": 1800.00, "stock_quantity": 95},
+    {"name": "Wrigley's PK Chewing Gum (Display Box: 30 pks)", "sku": "SNK-GM-PK30", "category": "Snacks & Sweets", "buying_price": 950.00, "unit_cost": 1200.00, "stock_quantity": 800},
+    {"name": "Wrigley's Doublemint Gum (Display Box: 30 pks)", "sku": "SNK-GM-DM30", "category": "Snacks & Sweets", "buying_price": 950.00, "unit_cost": 1200.00, "stock_quantity": 750},
 
-    # --- CATEGORY: CONSTRUCTION & BUILDING MATERIALS ---
-    {"name": "Portland Cement 50kg (Pallet: 40 Bags)", "sku": "BLD-CM-50K40", "category": "Building Materials", "unit_cost": 34000.00, "stock_quantity": 150},
-    {"name": "D12 Ribbed Steel Rebar (Bundle: 50 pcs)", "sku": "BLD-ST-D12B50", "category": "Building Materials", "unit_cost": 48000.00, "stock_quantity": 85},
-    {"name": "Corrugated Iron Roofing Sheets (Bundle: 20 pcs)", "sku": "BLD-RF-IRN20", "category": "Building Materials", "unit_cost": 22000.00, "stock_quantity": 110},
-    {"name": "Premium White Emulsion Paint (20L Bucket)", "sku": "BLD-PT-WHT20", "category": "Building Materials", "unit_cost": 6500.00, "stock_quantity": 240},
-    {"name": "Ceramic Floor Tiles 60x60cm (Pallet: 20 Cartons)", "sku": "BLD-TL-CR60", "category": "Building Materials", "unit_cost": 32000.00, "stock_quantity": 70},
+    # =========================================================
+    # --- HOME CARE & CLEANING ---
+    # =========================================================
+    {"name": "Omo Washing Powder (Sack: 10kg)", "sku": "CLN-PW-OM10K", "category": "Home Cleaning", "buying_price": 2100.00, "unit_cost": 2500.00, "stock_quantity": 450},
+    {"name": "Omo Hand Wash Powder (Carton: 24 x 500g)", "sku": "CLN-PW-OM500", "category": "Home Cleaning", "buying_price": 3400.00, "unit_cost": 3900.00, "stock_quantity": 320},
+    {"name": "Ariel Machine Detergent (Carton: 6 x 2kg)", "sku": "CLN-PW-AR2K", "category": "Home Cleaning", "buying_price": 3200.00, "unit_cost": 3800.00, "stock_quantity": 180},
+    {"name": "Sunlight Liquid Dishwash (Carton: 12 x 1L)", "sku": "CLN-LQ-SL1L", "category": "Home Cleaning", "buying_price": 1750.00, "unit_cost": 2100.00, "stock_quantity": 320},
+    {"name": "Sunlight Liquid Dishwash (Carton: 24 x 500ml)", "sku": "CLN-LQ-SL500", "category": "Home Cleaning", "buying_price": 2100.00, "unit_cost": 2500.00, "stock_quantity": 400},
+    {"name": "Ushindi Bar Soap (Carton: 25 x 800g)", "sku": "CLN-BR-US800", "category": "Home Cleaning", "buying_price": 2800.00, "unit_cost": 3300.00, "stock_quantity": 550},
+    {"name": "Menengai Bar Soap (Carton: 25 x 800g)", "sku": "CLN-BR-MG800", "category": "Home Cleaning", "buying_price": 2900.00, "unit_cost": 3500.00, "stock_quantity": 600},
+    {"name": "Jamaa Cream Bar Soap (Carton: 25 x 800g)", "sku": "CLN-BR-JM800", "category": "Home Cleaning", "buying_price": 2850.00, "unit_cost": 3400.00, "stock_quantity": 480},
+    {"name": "Toilex Tissue Paper (Bale: 40 Rolls)", "sku": "CLN-PP-TL40", "category": "Home Cleaning", "buying_price": 950.00, "unit_cost": 1200.00, "stock_quantity": 1500},
+    {"name": "Velvex Premium Tissue (Bale: 40 Rolls)", "sku": "CLN-PP-VX40", "category": "Home Cleaning", "buying_price": 1400.00, "unit_cost": 1800.00, "stock_quantity": 800},
+    {"name": "Velvex Kitchen Towels (Bale: 24 Rolls)", "sku": "CLN-PP-VXKT24", "category": "Home Cleaning", "buying_price": 1600.00, "unit_cost": 2000.00, "stock_quantity": 420},
+    {"name": "Jik Bleach / Disinfectant (Carton: 12 x 750ml)", "sku": "CLN-LQ-JK750", "category": "Home Cleaning", "buying_price": 1400.00, "unit_cost": 1800.00, "stock_quantity": 280},
+    {"name": "Harpic Toilet Bowl Cleaner (Carton: 12 x 500ml)", "sku": "CLN-LQ-HP500", "category": "Home Cleaning", "buying_price": 1700.00, "unit_cost": 2100.00, "stock_quantity": 220},
+    {"name": "Doom Insecticide Spray (Carton: 24 x 400ml)", "sku": "CLN-AR-DM400", "category": "Home Cleaning", "buying_price": 5400.00, "unit_cost": 6500.00, "stock_quantity": 150},
+    {"name": "Mortein Doom Spray (Carton: 24 x 400ml)", "sku": "CLN-AR-MD400", "category": "Home Cleaning", "buying_price": 5600.00, "unit_cost": 6700.00, "stock_quantity": 120},
 
-    # --- CATEGORY: OFFICE FURNITURE ---
-    {"name": "Ergonomic Mesh Office Chair (Carton: 2 units)", "sku": "FUR-CH-ERG2", "category": "Office Furniture", "unit_cost": 28000.00, "stock_quantity": 65},
-    {"name": "Executive Mahogany L-Desk (Single Unit)", "sku": "FUR-DS-EXEC1", "category": "Office Furniture", "unit_cost": 45000.00, "stock_quantity": 20},
-    {"name": "4-Drawer Steel Filing Cabinet (Single Unit)", "sku": "FUR-CB-STL4", "category": "Office Furniture", "unit_cost": 22000.00, "stock_quantity": 45}
+    # =========================================================
+    # --- PERSONAL CARE & HYGIENE ---
+    # =========================================================
+    {"name": "Geisha Aloe Vera Soap (Carton: 48 x 175g)", "sku": "BTY-SP-GSA175", "category": "Personal Care", "buying_price": 4100.00, "unit_cost": 4800.00, "stock_quantity": 520},
+    {"name": "Geisha Rose Soap (Carton: 48 x 175g)", "sku": "BTY-SP-GSR175", "category": "Personal Care", "buying_price": 4100.00, "unit_cost": 4800.00, "stock_quantity": 480},
+    {"name": "Dettol Original Soap (Carton: 48 x 175g)", "sku": "BTY-SP-DT175", "category": "Personal Care", "buying_price": 4500.00, "unit_cost": 5200.00, "stock_quantity": 340},
+    {"name": "Imperial Leather Classic (Carton: 48 x 175g)", "sku": "BTY-SP-IL175", "category": "Personal Care", "buying_price": 4300.00, "unit_cost": 5000.00, "stock_quantity": 290},
+    {"name": "Colgate Herbal Toothpaste (Carton: 36 x 100g)", "sku": "BTY-OR-CG100", "category": "Personal Care", "buying_price": 2900.00, "unit_cost": 3600.00, "stock_quantity": 610},
+    {"name": "Close-Up Red Hot Toothpaste (Carton: 36 x 100g)", "sku": "BTY-OR-CU100", "category": "Personal Care", "buying_price": 2800.00, "unit_cost": 3400.00, "stock_quantity": 420},
+    {"name": "Valon Petroleum Jelly (Carton: 24 x 250g)", "sku": "BTY-SK-VL250", "category": "Personal Care", "buying_price": 2200.00, "unit_cost": 2800.00, "stock_quantity": 450},
+    {"name": "Arimis Milking Jelly (Carton: 24 x 250g)", "sku": "BTY-SK-AR250", "category": "Personal Care", "buying_price": 1800.00, "unit_cost": 2400.00, "stock_quantity": 1200},
+    {"name": "Arimis Milking Jelly (Carton: 48 x 100g)", "sku": "BTY-SK-AR100", "category": "Personal Care", "buying_price": 2100.00, "unit_cost": 2800.00, "stock_quantity": 850},
+    {"name": "Always Ultra Sanitary Pads (Carton: 24 packs x 8s)", "sku": "BTY-FH-ALU8", "category": "Personal Care", "buying_price": 1800.00, "unit_cost": 2200.00, "stock_quantity": 580},
+    {"name": "Always Maxi Thick Pads (Carton: 24 packs x 8s)", "sku": "BTY-FH-ALM8", "category": "Personal Care", "buying_price": 1600.00, "unit_cost": 2000.00, "stock_quantity": 450},
+
+    # =========================================================
+    # --- BABY CARE ---
+    # =========================================================
+    {"name": "Pampers Baby-Dry Size 3 (Bale: 4 x 40s)", "sku": "BBY-DP-PM3", "category": "Baby Care", "buying_price": 3100.00, "unit_cost": 3800.00, "stock_quantity": 320},
+    {"name": "Pampers Baby-Dry Size 4 (Bale: 4 x 36s)", "sku": "BBY-DP-PM4", "category": "Baby Care", "buying_price": 3100.00, "unit_cost": 3800.00, "stock_quantity": 290},
+    {"name": "Huggies Gold Size 3 (Bale: 4 x 40s)", "sku": "BBY-DP-HG3", "category": "Baby Care", "buying_price": 3400.00, "unit_cost": 4100.00, "stock_quantity": 210},
+    {"name": "Softcare Baby Diapers Size 3 (Bale: 4 x 40s)", "sku": "BBY-DP-SC3", "category": "Baby Care", "buying_price": 2600.00, "unit_cost": 3200.00, "stock_quantity": 500},
+    {"name": "Softcare Baby Wipes (Carton: 24 packs x 80s)", "sku": "BBY-WP-SC80", "category": "Baby Care", "buying_price": 3100.00, "unit_cost": 3800.00, "stock_quantity": 410},
+    {"name": "Johnson's Baby Powder (Carton: 24 x 200g)", "sku": "BBY-SK-JBP200", "category": "Baby Care", "buying_price": 3400.00, "unit_cost": 4200.00, "stock_quantity": 150},
+    {"name": "Johnson's Baby Oil (Carton: 24 x 200ml)", "sku": "BBY-SK-JBO200", "category": "Baby Care", "buying_price": 3800.00, "unit_cost": 4600.00, "stock_quantity": 110},
+
+    # =========================================================
+    # --- STATIONERY & BASIC HOME ---
+    # =========================================================
+    {"name": "Chui Matchboxes (Carton: 10 bundles)", "sku": "HDW-MT-CH100", "category": "Stationery & Home", "buying_price": 350.00, "unit_cost": 450.00, "stock_quantity": 850},
+    {"name": "Rhino Matchboxes (Carton: 10 bundles)", "sku": "HDW-MT-RH100", "category": "Stationery & Home", "buying_price": 340.00, "unit_cost": 440.00, "stock_quantity": 600},
+    {"name": "Eveready AA Batteries (Display Card: 24 pairs)", "sku": "HDW-BT-EV24", "category": "Stationery & Home", "buying_price": 1900.00, "unit_cost": 2400.00, "stock_quantity": 340},
+    {"name": "Energizer AA Batteries (Display Card: 24 pairs)", "sku": "HDW-BT-EN24", "category": "Stationery & Home", "buying_price": 2600.00, "unit_cost": 3200.00, "stock_quantity": 150},
+    {"name": "Kasuku A5 Exercise Books (Carton: 120 pcs)", "sku": "STN-BK-KS120", "category": "Stationery & Home", "buying_price": 3800.00, "unit_cost": 4500.00, "stock_quantity": 210},
+    {"name": "Kasuku A4 200pg Ruled Books (Carton: 48 pcs)", "sku": "STN-BK-KSA4", "category": "Stationery & Home", "buying_price": 4200.00, "unit_cost": 5000.00, "stock_quantity": 180},
+    {"name": "BIC Ballpoint Pens - Blue (Box: 50 pcs)", "sku": "STN-PN-BCB50", "category": "Stationery & Home", "buying_price": 850.00, "unit_cost": 1100.00, "stock_quantity": 300},
+    {"name": "BIC Ballpoint Pens - Black (Box: 50 pcs)", "sku": "STN-PN-BCK50", "category": "Stationery & Home", "buying_price": 850.00, "unit_cost": 1100.00, "stock_quantity": 250},
+
+    # =========================================================
+    # --- HARDWARE & CONSTRUCTION ---
+    # =========================================================
+    {"name": "Bamburi Portland Cement 50kg (Pallet: 40 Bags)", "sku": "BLD-CM-BB50", "category": "Building Materials", "buying_price": 29000.00, "unit_cost": 34000.00, "stock_quantity": 150},
+    {"name": "Simba Cement 50kg (Pallet: 40 Bags)", "sku": "BLD-CM-SM50", "category": "Building Materials", "buying_price": 28000.00, "unit_cost": 33000.00, "stock_quantity": 80},
+    {"name": "Savannah Cement 50kg (Pallet: 40 Bags)", "sku": "BLD-CM-SV50", "category": "Building Materials", "buying_price": 28500.00, "unit_cost": 33500.00, "stock_quantity": 120},
+    {"name": "Crown Paints Vinyl Matt (20L Bucket)", "sku": "BLD-PT-CR20", "category": "Building Materials", "buying_price": 5200.00, "unit_cost": 6500.00, "stock_quantity": 240},
+    {"name": "Basco Paints Silk Vinyl (20L Bucket)", "sku": "BLD-PT-BS20", "category": "Building Materials", "buying_price": 4800.00, "unit_cost": 6100.00, "stock_quantity": 180},
+    {"name": "Mabati Rolling Mills Dumuzi Sheets (Bundle 20)", "sku": "BLD-RF-MR20", "category": "Building Materials", "buying_price": 18000.00, "unit_cost": 22000.00, "stock_quantity": 110},
+    {"name": "Devki D12 Ribbed Steel Rebar (Bundle: 50 pcs)", "sku": "BLD-ST-DVK12", "category": "Building Materials", "buying_price": 42000.00, "unit_cost": 48000.00, "stock_quantity": 95},
+
+    # =========================================================
+    # --- ELECTRONICS & APPLIANCES ---
+    # =========================================================
+    {"name": "Ramtons 1.5L Stainless Steel Kettle", "sku": "APP-KT-RM15", "category": "Electronics & TVs", "buying_price": 1600.00, "unit_cost": 2200.00, "stock_quantity": 65},
+    {"name": "Ramtons 20L Digital Microwave Oven", "sku": "APP-MW-RM20", "category": "Electronics & TVs", "buying_price": 6800.00, "unit_cost": 8500.00, "stock_quantity": 22}, 
+    {"name": "Mika Standing Fan 16-Inch", "sku": "APP-FN-MK16", "category": "Electronics & TVs", "buying_price": 2400.00, "unit_cost": 3200.00, "stock_quantity": 40},
+    {"name": "Von Hotpoint Double Door Fridge 400L", "sku": "APP-FR-VH400", "category": "Heavy Appliances", "buying_price": 62000.00, "unit_cost": 75000.00, "stock_quantity": 15},
+    {"name": "Samsung 50-Inch 4K UHD Smart TV", "sku": "TV-50-SM4K", "category": "Electronics & TVs", "buying_price": 65000.00, "unit_cost": 82000.00, "stock_quantity": 25},
+    {"name": "Hisense 43-Inch Frameless Smart TV", "sku": "TV-43-HS43", "category": "Electronics & TVs", "buying_price": 32000.00, "unit_cost": 41000.00, "stock_quantity": 42},
+    {"name": "Tecno Spark 20 Pro (Carton: 10 units)", "sku": "MOB-AD-TC20P", "category": "Smartphones & IT", "buying_price": 185000.00, "unit_cost": 220000.00, "stock_quantity": 12},
+    {"name": "Infinix Hot 40 (Carton: 10 units)", "sku": "MOB-AD-IX40", "category": "Smartphones & IT", "buying_price": 155000.00, "unit_cost": 185000.00, "stock_quantity": 18}
 ]
 
 def seed_database():
@@ -203,7 +196,7 @@ def seed_database():
         # --- THE EXCLUSION WIPE ---
         try:
             db.session.query(Product).delete()
-            # Also purge old automated stocking debits so we don't double-charge the ledger!
+            # Purge old automated stocking debits so we don't double-charge the ledger!
             db.session.query(Ledger).filter(Ledger.description.like('%Initial Enterprise Warehouse Stocking%')).delete(synchronize_session=False)
             db.session.commit()
             print("[!] Old inventory and automated ledger charges purged successfully.\n")
@@ -212,33 +205,35 @@ def seed_database():
             db.session.rollback()
 
         added_count = 0
-        total_value = 0.0
+        total_expense = 0.0
         
-        # Inject the massive list
+        # Inject the massive localized list
         for item in master_b2b_inventory:
             new_product = Product(
                 name=item['name'],
                 sku=item['sku'],
                 category=item['category'],
+                buying_price=item['buying_price'],
                 unit_cost=item['unit_cost'],
                 stock_quantity=item['stock_quantity']
             )
             db.session.add(new_product)
             added_count += 1
-            item_total = item['unit_cost'] * item['stock_quantity']
-            total_value += item_total
+            
+            # The Ledger must be charged based on the BUYING PRICE, not the Selling Price
+            item_expense = item['buying_price'] * item['stock_quantity']
+            total_expense += item_expense
             
             # Terminal output logic
             status = "CRITICAL" if item['stock_quantity'] < 25 else "HEALTHY"
             if item['stock_quantity'] == 0: status = "DEPLETED"
             
-            # Formatted terminal output
             print(f"  -> [INJECTED] SKU: {item['sku']:<15} | {item['name'][:35]:<35} | Vol: {item['stock_quantity']:<4} | Status: {status}")
                 
         # --- CHARGE THE LEDGER ---
         initial_stock_debit = Ledger(
             transaction_type='Debit',
-            amount=total_value,
+            amount=total_expense,
             description="Initial Enterprise Warehouse Stocking (Bulk B2B Purchase)"
         )
         db.session.add(initial_stock_debit)
@@ -246,9 +241,9 @@ def seed_database():
         db.session.commit()
         
         print("\n" + "="*70)
-        print(f"  SYSTEM OVERVIEW: {added_count} active global product lines registered.")
-        print(f"  ESTIMATED WAREHOUSE ASSET VALUE: KES {total_value:,.2f}")
-        print(f"  CASHBOOK UPDATED: Successfully debited KES {total_value:,.2f} from the master ledger.")
+        print(f"  SYSTEM OVERVIEW: {added_count} active localized product lines registered.")
+        print(f"  CAPITAL DEPLOYED: KES {total_expense:,.2f}")
+        print(f"  CASHBOOK UPDATED: Successfully debited KES {total_expense:,.2f} from the master ledger.")
         print("="*70 + "\n")
 
 if __name__ == "__main__":

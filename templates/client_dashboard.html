@@ -63,6 +63,8 @@
                         <td>
                             {% if 'Paid' in order.status %}
                                 <span class="status-tag tag-green">{{ order.status }}</span>
+                            {% elif 'Payment Submitted' in order.status %}
+                                <span class="status-tag tag-yellow">Awaiting Verification</span>
                             {% elif 'Rejected' in order.status %}
                                 <span class="status-tag tag-red">{{ order.status }}</span>
                             {% elif 'Approved' in order.status or 'Awaiting Payment' in order.status %}
@@ -73,7 +75,9 @@
                         </td>
                         <td>
                             {% if 'Approved' in order.status or 'Awaiting Payment' in order.status %}
-                                <button class="btn-pay" onclick="simulateMPESA({{ order.id }}, event)">Clear Invoice</button>
+                                <a class="btn-pay" href="/client/payment/{{ order.id }}" style="display:inline-block; text-decoration:none;">Pay Now</a>
+                            {% elif 'Payment Submitted' in order.status %}
+                                <button class="btn-disabled" disabled>Verification Pending</button>
                             {% elif 'Paid' in order.status %}
                                 <button class="btn-disabled" disabled>Cleared</button>
                             {% else %}
@@ -95,41 +99,4 @@
     </div>
 </div>
 
-<script>
-    function simulateMPESA(orderId, event) {
-        const btn = event.target;
-        btn.innerText = "Processing...";
-        btn.style.background = "#f59e0b"; // Turns amber to show it's "thinking"
-        btn.style.opacity = "0.8";
-        btn.disabled = true;
-
-        // Cinematic 1.5 second delay
-        setTimeout(() => {
-            fetch(`/api/mpesa_pay/${orderId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.error) {
-                    alert("Payment Failed: " + data.error);
-                    btn.innerText = "Clear Invoice";
-                    btn.style.background = "#34d399";
-                    btn.style.opacity = "1";
-                    btn.disabled = false;
-                } else {
-                    alert("✅ M-PESA Payment Verified! Inventory deducted and receipt generated.");
-                    location.reload(); // Reloads the page so the row turns green and says "Paid"
-                }
-            })
-            .catch(err => {
-                alert("Network Error");
-                btn.innerText = "Clear Invoice";
-                btn.style.background = "#34d399";
-                btn.style.opacity = "1";
-                btn.disabled = false;
-            });
-        }, 1500); 
-    }
-</script>
 {% endblock %}

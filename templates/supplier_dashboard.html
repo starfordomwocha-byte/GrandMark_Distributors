@@ -96,7 +96,7 @@
         const btn = event.target;
 
         if (!qty || qty <= 0) {
-            alert("Please enter a valid injection quantity.");
+            showToast("Please enter a valid injection quantity.", 'warning');
             return;
         }
 
@@ -111,11 +111,11 @@
         .then(res => res.json())
         .then(data => {
             if(data.error) {
-                alert(data.error);
+                showToast(data.error, 'error');
                 btn.innerText = "Inject";
                 btn.style.opacity = "1";
             } else {
-                alert(data.message); // Shows the success message and total KES billed
+                showToast(data.message, 'success');
                 location.reload(); // Refresh to show new stock numbers
             }
         });

@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+{% block title %}Control Tower | GrandMark{% endblock %}
+
+{% block content %}
+<style>
+    .tower-wrapper { max-width: 1680px; margin: 2rem auto 6rem auto; padding: 0 2.5rem; }
+    .tower-header { display: flex; justify-content: space-between; align-items: center; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1.1rem; }
+    .tower-header h1 { color: #fff; margin: 0; font-size: 2.4rem; }
+    .tower-header-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.8rem; margin-bottom: 1.8rem; }
+    .grid-1 { display: grid; grid-template-columns: 1fr; gap: 1.8rem; margin-bottom: 1.8rem; }
+    .panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 1.6rem; }
+    .panel h2 { margin: 0 0 1.1rem 0; color: #fff; font-size: 1.25rem; display:flex; justify-content:space-between; }
+
+    .admin-form { display: flex; gap: 8px; flex-wrap: wrap; }
+    .admin-input { flex: 1; min-width: 160px; padding: 12px 14px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); border-radius: 9px; color: #fff; }
+    .btn-submit { background: var(--accent-color); border: none; color: #000; border-radius: 9px; padding: 11px 14px; font-weight: 800; cursor: pointer; }
+    .btn-export { background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color); border-radius: 9px; padding: 10px 12px; text-decoration:none; }
+
+    .table-container { max-height: 360px; overflow: auto; }
+    .admin-table { width:100%; border-collapse: collapse; }
+    .admin-table th { position: sticky; top: 0; background: rgba(0,0,0,0.45); color: #94a3b8; text-align: left; padding: 11px 10px; font-size: 0.82rem; text-transform: uppercase; }
+    .admin-table td { color: #d1d5db; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 10px; font-size: 0.92rem; }
+    .admin-table tbody tr:nth-child(odd) { background: rgba(255,255,255,0.02); }
+    .admin-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.05); }
+    .admin-table tbody tr:hover { background: rgba(79, 209, 197, 0.08); }
+
+    .grid-2 > .panel, .grid-1 > .panel { position: relative; overflow: hidden; }
+    .grid-2 > .panel::before, .grid-1 > .panel::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: rgba(79, 209, 197, 0.75);
+    }
+    .grid-2 > .panel:nth-child(2n)::before { background: rgba(56, 189, 248, 0.75); }
+
+    .mono { font-family: monospace; color: #94a3b8; }
+    .muted { color: #94a3b8; font-size: 0.83rem; }
+    .mode-strip { display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 1.25rem; }
+    .kpi-grid { display:grid; grid-template-columns: repeat(4, minmax(120px,1fr)); gap: 10px; margin: 10px 0; }
+    .kpi-box { background: rgba(0,0,0,0.28); border:1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 10px; }
+    .kpi-label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; }
+    .kpi-value { color:#fff; font-weight: 700; margin-top:3px; }
+    .risk-meter { height: 10px; border-radius: 99px; background: rgba(255,255,255,0.1); overflow:hidden; margin-top:8px; }
+    .risk-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #22c55e, #eab308, #ef4444); }
+    .board-list { margin:8px 0 0 0; padding:0; list-style:none; }
+    .board-list li { color:#d1d5db; border-bottom:1px dashed rgba(255,255,255,0.08); padding:7px 0; font-size:0.9rem; }
+
+    .mobile-compact .panel { padding: 0.85rem; border-radius: 12px; }
+    .mobile-compact .admin-table td, .mobile-compact .admin-table th { padding: 6px; font-size: 0.78rem; }
+    .minimal-focus #legacyAdminBlocks { display: none; }
+
+    @media (max-width: 1100px) {
+        .grid-2 { grid-template-columns: 1fr; }
+        .kpi-grid { grid-template-columns: repeat(2, minmax(120px,1fr)); }
+        .tower-wrapper { padding: 0 1.1rem; }
+        .tower-header { align-items: flex-start; }
+        .tower-header h1 { font-size: 1.8rem; }
+    }
+</style>
+
+<div class="tower-wrapper" data-aos="fade-in">
+    <div class="tower-header">
+        <h1>Admin Control Tower</h1>
+        <div class="tower-header-actions">
+            <a href="/logout" class="btn-export" style="color:#f87171; border-color:#f87171;">Logout</a>
+            <span class="btn-export">Role: {{ admin_role }}</span>
+            <a href="/admin" class="btn-export">Back to Console</a>
+        </div>
+    </div>
+
+    <div class="mode-strip">
+        <button type="button" id="modeDefaultBtn" class="btn-export">Default Mode</button>
+        <button type="button" id="modeCompactBtn" class="btn-export">Mobile Compact Mode</button>
+        <button type="button" id="modeMinimalBtn" class="btn-export">Minimal Focus Mode</button>
+        {% if ui_permissions.support %}
+        <button type="button" id="sendSmtpTestBtn" class="btn-export">Send SMTP Test</button>
+        {% endif %}
+    </div>
+
+    <div class="grid-2">
+        <div class="panel">
+            <h2>Executive Command Center</h2>
+            <button id="loadExperienceBtn" class="btn-export">Load Command Center</button>
+            <div class="kpi-grid" id="kpiGrid">
+                <div class="kpi-box"><div class="kpi-label">Income</div><div class="kpi-value">-</div></div>
+                <div class="kpi-box"><div class="kpi-label">Expense</div><div class="kpi-value">-</div></div>
+                <div class="kpi-box"><div class="kpi-label">Net</div><div class="kpi-value">-</div></div>
+                <div class="kpi-box"><div class="kpi-label">High-Value Unpaid</div><div class="kpi-value">-</div></div>
+            </div>
+            <div class="muted">Risk Meter</div>
+            <div class="risk-meter"><div id="riskFill" class="risk-fill"></div></div>
+            <div id="riskText" class="muted" style="margin-top:6px;">Load to view risk score.</div>
+            <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                <button id="quickHighUnpaidBtn" class="btn-export">Quick Action: High-Value Unpaid</button>
+                <button id="quickStockoutBtn" class="btn-export">Quick Action: Stockout Risks</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>AI Copilot For Admin</h2>
+            <form id="copilotForm" class="admin-form">
+                <input id="copilotPrompt" class="admin-input" placeholder="Ask: show high value unpaid / stockout risks / fraud summary" required>
+                <button type="submit" class="btn-submit">Run</button>
+            </form>
+            <div id="copilotReply" class="muted" style="white-space:pre-line; margin-top:10px;">Copilot is ready.</div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="panel">
+            <h2>Sales Growth Engine</h2>
+            <ul id="salesBoard" class="board-list"><li>Load Command Center to view top clients and growth signals.</li></ul>
+        </div>
+        <div class="panel">
+            <h2>Supplier War Room</h2>
+            <ul id="supplierBoard" class="board-list"><li>Load Command Center to view supplier engagement and health.</li></ul>
+        </div>
+    </div>
+
+    <div class="grid-1">
+        <div class="panel">
+            <h2>Fraud And Abuse Shield</h2>
+            <ul id="fraudBoard" class="board-list"><li>Load Command Center to inspect suspicious activity.</li></ul>
+        </div>
+    </div>
+
+    <div id="legacyAdminBlocks">
+
+    <div class="grid-2">
+        <div class="panel">
+            <h2>RBAC Roles</h2>
+            {% if not ui_permissions.security %}<p class="muted">Security permission required.</p>{% endif %}
+            <fieldset style="border:0; padding:0; margin:0;" {% if not ui_permissions.security %}disabled{% endif %}>
+            <form id="createAdminForm" class="admin-form" style="margin-bottom:8px;">
+                <input id="newAdminUsername" class="admin-input" placeholder="New admin username" required>
+                <input id="newAdminPassword" type="password" class="admin-input" placeholder="Temporary password (min 8 chars)" required>
+                <select id="newAdminRole" class="admin-input">
+                    <option>Super Admin</option><option>Finance</option><option>Operations</option><option>Inventory</option><option>Support</option><option>Viewer</option>
+                </select>
+                <button type="submit" class="btn-submit">Create Admin User</button>
+            </form>
+            <div class="table-container" style="margin-top:4px; margin-bottom:10px;">
+                <table class="admin-table"><thead><tr><th>Admin Username</th><th>2FA Setup</th></tr></thead><tbody>
+                    {% for u in admin_users %}<tr><td>{{ u.username }}</td><td class="muted">Scan QR on first login at /2fa</td></tr>{% else %}<tr><td colspan="2" class="muted">No admin users found.</td></tr>{% endfor %}
+                </tbody></table>
+            </div>
+            <form id="roleForm" class="admin-form">
+                <input id="roleUsername" class="admin-input" placeholder="Admin username" required>
+                <select id="roleValue" class="admin-input">
+                    <option>Super Admin</option><option>Finance</option><option>Operations</option><option>Inventory</option><option>Support</option><option>Viewer</option>
+                </select>
+                <button type="submit" class="btn-submit">Assign Role</button>
+            </form>
+            </fieldset>
+            <div class="table-container" style="margin-top:10px;">
+                <table class="admin-table"><thead><tr><th>Username</th><th>Role</th><th>Updated</th><th>Action</th></tr></thead><tbody>
+                    {% for r in roles %}
+                    <tr>
+                        <td>{{ r.username }}</td>
+                        <td>{{ r.role }}</td>
+                        <td class="mono">{{ r.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if ui_permissions.security and r.username != session.get('username') %}
+                            <button type="button" class="btn-export role-delete-btn" data-username="{{ r.username }}" style="padding:6px 8px; border-color:#ef4444; color:#ef4444;">Delete Role</button>
+                            {% else %}
+                            <span class="muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="muted">No role assignments.</td></tr>
+                    {% endfor %}
+                </tbody></table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Workflow Engine</h2>
+            {% if not ui_permissions.operations %}<p class="muted">Operations permission required.</p>{% endif %}
+            <fieldset style="border:0; padding:0; margin:0;" {% if not ui_permissions.operations %}disabled{% endif %}>
+            <form id="workflowForm" class="admin-form">
+                <input id="wfOrder" type="number" min="1" class="admin-input" placeholder="Order ID" required>
+                <select id="wfStatus" class="admin-input">
+                    <option>Pending Approval</option><option>Approved - Awaiting Payment</option><option>Paid</option><option>Packed</option><option>Dispatched</option><option>Delivered</option><option>Rejected</option>
+                </select>
+                <input id="wfNote" class="admin-input" placeholder="Note (optional)">
+                <button type="submit" class="btn-submit">Update Status</button>
+            </form>
+            </fieldset>
+            <div class="table-container" style="margin-top:10px;">
+                <table class="admin-table"><thead><tr><th>Order</th><th>Transition</th><th>By</th><th>Time</th></tr></thead><tbody>
+                    {% for e in workflow_events %}<tr><td>GMK-00{{ e.inquiry_id }}</td><td>{{ e.from_status }} -> {{ e.to_status }}</td><td>{{ e.actor }}</td><td class="mono">{{ e.timestamp.strftime('%Y-%m-%d %H:%M') }}</td></tr>{% else %}<tr><td colspan="4" class="muted">No workflow transitions.</td></tr>{% endfor %}
+                </tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="panel">
+            <h2>Client Credit Control</h2>
+            {% if not ui_permissions.finance %}<p class="muted">Finance permission required.</p>{% endif %}
+            <fieldset style="border:0; padding:0; margin:0;" {% if not ui_permissions.finance %}disabled{% endif %}>
+            <form id="creditForm" class="admin-form">
+                <select id="ccEmail" class="admin-input">{% for c in clients %}<option value="{{ c.email }}">{{ c.company_name }} ({{ c.email }})</option>{% endfor %}</select>
+                <input id="ccLimit" type="number" step="0.01" class="admin-input" placeholder="Credit limit" required>
+                <input id="ccOutstanding" type="number" step="0.01" class="admin-input" placeholder="Outstanding" required>
+                <button type="submit" class="btn-submit">Save</button>
+            </form>
+            </fieldset>
+            <div class="table-container" style="margin-top:10px;">
+                <table class="admin-table"><thead><tr><th>Email</th><th>Limit</th><th>Outstanding</th><th>Active</th></tr></thead><tbody>
+                    {% for c in credit_controls %}<tr><td>{{ c.client_email }}</td><td>{{ "{:,.2f}".format(c.credit_limit) }}</td><td>{{ "{:,.2f}".format(c.outstanding_balance) }}</td><td>{{ 'Yes' if c.is_active else 'No' }}</td></tr>{% else %}<tr><td colspan="4" class="muted">No credit controls defined.</td></tr>{% endfor %}
+                </tbody></table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Returns / RMA</h2>
+            {% if not ui_permissions.support %}<p class="muted">Support permission required.</p>{% endif %}
+            <fieldset style="border:0; padding:0; margin:0;" {% if not ui_permissions.support %}disabled{% endif %}>
+            <form id="returnCreateForm" class="admin-form">
+                <input id="rrOrder" type="number" min="1" class="admin-input" placeholder="Order ID" required>
+                <input id="rrAmount" type="number" step="0.01" class="admin-input" placeholder="Requested amount" required>
+                <input id="rrReason" class="admin-input" placeholder="Return reason" required>
+                <button type="submit" class="btn-submit">Create RMA</button>
+            </form>
+            <form id="returnResolveForm" class="admin-form" style="margin-top:8px;">
+                <input id="rrId" type="number" min="1" class="admin-input" placeholder="RMA ID" required>
+                <select id="rrDecision" class="admin-input"><option value="approved">Approve</option><option value="rejected">Reject</option></select>
+                <input id="rrApproved" type="number" step="0.01" class="admin-input" placeholder="Approved amount">
+                <button type="submit" class="btn-submit">Resolve RMA</button>
+            </form>
+            </fieldset>
+            <div class="table-container" style="margin-top:10px;">
+                <table class="admin-table"><thead><tr><th>ID</th><th>Order</th><th>Status</th><th>Requested</th><th>Approved</th></tr></thead><tbody>
+                    {% for r in returns %}<tr><td>{{ r.id }}</td><td>GMK-00{{ r.inquiry_id }}</td><td>{{ r.status }}</td><td>{{ "{:,.2f}".format(r.requested_amount) }}</td><td>{{ "{:,.2f}".format(r.approved_amount) }}</td></tr>{% else %}<tr><td colspan="5" class="muted">No RMAs logged.</td></tr>{% endfor %}
+                </tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="panel">
+            <h2>Notification Templates</h2>
+            {% if not ui_permissions.support %}<p class="muted">Support permission required.</p>{% endif %}
+            <fieldset style="border:0; padding:0; margin:0;" {% if not ui_permissions.support %}disabled{% endif %}>
+            <form id="templateForm" class="admin-form">
+                <input id="tplName" class="admin-input" placeholder="Template name" required>
+                <select id="tplChannel" class="admin-input"><option value="email">Email</option><option value="sms">SMS</option><option value="whatsapp">WhatsApp</option></select>
+                <input id="tplSubject" class="admin-input" placeholder="Subject" required>
+                <input id="tplBody" class="admin-input" placeholder="Body text" required>
+                <button type="submit" class="btn-submit">Save Template</button>
+            </form>
+            </fieldset>
+            <div class="table-container" style="margin-top:10px;">
+                <table class="admin-table"><thead><tr><th>Name</th><th>Channel</th><th>Subject</th></tr></thead><tbody>
+                    {% for t in templates %}<tr><td>{{ t.name }}</td><td>{{ t.channel }}</td><td>{{ t.subject }}</td></tr>{% else %}<tr><td colspan="3" class="muted">No templates saved.</td></tr>{% endfor %}
+                </tbody></table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Inventory Policy + Reorder</h2>
+            {% if not ui_permissions.inventory %}<p class="muted">Inventory permission required.</p>{% endif %}
+            <fieldset style="border:0; padding:0; margin:0;" {% if not ui_permissions.inventory %}disabled{% endif %}>
+            <form id="policyForm" class="admin-form">
+                <select id="policyProduct" class="admin-input">{% for p in products %}<option value="{{ p.id }}">{{ p.name }} ({{ p.sku }})</option>{% endfor %}</select>
+                <input id="policyPoint" type="number" class="admin-input" placeholder="Reorder point" required>
+                <input id="policyQty" type="number" class="admin-input" placeholder="Reorder qty" required>
+                <input id="policyLead" type="number" class="admin-input" placeholder="Lead days" required>
+                <button type="submit" class="btn-submit">Save Policy</button>
+            </form>
+            <button id="loadReorderBtn" class="btn-export" style="margin-top:8px;">Load Reorder Suggestions</button>
+            <div id="reorderResult" class="muted" style="margin-top:8px;"></div>
+            </fieldset>
+            <div class="table-container" style="margin-top:10px;">
+                <table class="admin-table"><thead><tr><th>Product ID</th><th>Point</th><th>Qty</th><th>Lead</th></tr></thead><tbody>
+                    {% for p in policies %}<tr><td>{{ p.product_id }}</td><td>{{ p.reorder_point }}</td><td>{{ p.reorder_qty }}</td><td>{{ p.lead_time_days }}d</td></tr>{% else %}<tr><td colspan="4" class="muted">No policies configured.</td></tr>{% endfor %}
+                </tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="panel">
+            <h2>Dispatch Board</h2>
+            {% if not ui_permissions.operations %}<p class="muted">Operations permission required.</p>{% endif %}
+            <fieldset style="border:0; padding:0; margin:0;" {% if not ui_permissions.operations %}disabled{% endif %}>
+            <form id="dispatchCreateForm" class="admin-form">
+                <input id="dpOrder" type="number" min="1" class="admin-input" placeholder="Order ID" required>
+                <input id="dpDriver" class="admin-input" placeholder="Driver name" required>
+                <input id="dpPlate" class="admin-input" placeholder="Vehicle plate" required>
+                <input id="dpRoute" class="admin-input" placeholder="Route" required>
+                <button type="submit" class="btn-submit">Create Dispatch</button>
+            </form>
+            <form id="dispatchStatusForm" class="admin-form" style="margin-top:8px;">
+                <input id="dpId" type="number" class="admin-input" placeholder="Dispatch ID" required>
+                <select id="dpStatus" class="admin-input"><option>Assigned</option><option>In Transit</option><option>Delivered</option><option>Delayed</option><option>Cancelled</option></select>
+                <button type="submit" class="btn-submit">Update Dispatch</button>
+            </form>
+            </fieldset>
+            <div class="table-container" style="margin-top:10px;">
+                <table class="admin-table"><thead><tr><th>ID</th><th>Order</th><th>Driver</th><th>Plate</th><th>Status</th></tr></thead><tbody>
+                    {% for d in dispatch_tickets %}<tr><td>{{ d.id }}</td><td>GMK-00{{ d.inquiry_id }}</td><td>{{ d.driver_name }}</td><td>{{ d.vehicle_plate }}</td><td>{{ d.status }}</td></tr>{% else %}<tr><td colspan="5" class="muted">No dispatch tickets.</td></tr>{% endfor %}
+                </tbody></table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Document Center + Analytics</h2>
+            {% if not ui_permissions.reports %}<p class="muted">Reports permission required to load analytics.</p>{% endif %}
+            <fieldset style="border:0; padding:0; margin:0;" {% if not ui_permissions.reports %}disabled{% endif %}>
+            <button id="loadAnalyticsBtn" class="btn-export">Load Analytics</button>
+            <div id="analyticsResult" class="muted" style="margin-top:8px; white-space:pre-line;"></div>
+            </fieldset>
+            <div class="table-container" style="margin-top:10px;">
+                <table class="admin-table"><thead><tr><th>Type</th><th>Reference</th><th>Path</th><th>Time</th></tr></thead><tbody>
+                    {% for d in documents %}<tr><td>{{ d.doc_type }}</td><td>{{ d.reference }}</td><td class="mono">{{ d.path }}</td><td class="mono">{{ d.created_at.strftime('%Y-%m-%d %H:%M') }}</td></tr>{% else %}<tr><td colspan="4" class="muted">No documents registered.</td></tr>{% endfor %}
+                </tbody></table>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<script>
+    const towerWrapper = document.querySelector('.tower-wrapper');
+
+    function apiPost(url, payload) {
+        return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload || {}) }).then(r => r.json());
+    }
+
+    function money(v){ return `KES ${Number(v || 0).toLocaleString()}`; }
+
+    function paintBoard(elId, lines) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (!lines || !lines.length) {
+            el.innerHTML = '<li>No data found.</li>';
+            return;
+        }
+        el.innerHTML = lines.map(x => `<li>${x}</li>`).join('');
+    }
+
+    function applyMode(mode) {
+        towerWrapper.classList.remove('mobile-compact', 'minimal-focus');
+        if (mode === 'compact') towerWrapper.classList.add('mobile-compact');
+        if (mode === 'minimal') towerWrapper.classList.add('minimal-focus');
+    }
+
+    function toastOrAlert(data, okFallback) {
+        if (data.error) {
+            if (typeof showToast === 'function') showToast(data.error, 'error'); else alert(data.error);
+            return false;
+        }
+        const msg = data.message || okFallback || 'Saved.';
+        if (typeof showToast === 'function') showToast(msg, 'success'); else alert(msg);
+        setTimeout(() => location.reload(), 900);
+        return true;
+    }
+
+    document.getElementById('modeDefaultBtn').addEventListener('click', function(){ applyMode('default'); });
+    document.getElementById('modeCompactBtn').addEventListener('click', function(){ applyMode('compact'); });
+    document.getElementById('modeMinimalBtn').addEventListener('click', function(){ applyMode('minimal'); });
+
+    const smtpTestBtn = document.getElementById('sendSmtpTestBtn');
+    if (smtpTestBtn) {
+        smtpTestBtn.addEventListener('click', function(){
+            const target = prompt('Send SMTP test to (leave blank to use MAIL_USERNAME):', '');
+            apiPost('/api/admin/email/test', { target_email: (target || '').trim() }).then(d => {
+                if (d.error) {
+                    if (typeof showToast === 'function') showToast(d.error, 'error'); else alert(d.error);
+                    return;
+                }
+                const msg = d.message || 'SMTP test sent.';
+                if (typeof showToast === 'function') showToast(msg, 'success'); else alert(msg);
+            });
+        });
+    }
+
+    document.getElementById('loadExperienceBtn').addEventListener('click', function(){
+        fetch('/api/admin/experience/overview').then(r => r.json()).then(d => {
+            if (d.error) {
+                if (typeof showToast === 'function') showToast(d.error, 'error'); else alert(d.error);
+                return;
+            }
+            const k = d.kpis || {};
+            const boxes = document.querySelectorAll('#kpiGrid .kpi-value');
+            if (boxes.length >= 4) {
+                boxes[0].innerText = money(k.income);
+                boxes[1].innerText = money(k.expense);
+                boxes[2].innerText = money(k.net);
+                boxes[3].innerText = Number(k.high_value_unpaid || 0);
+            }
+
+            const risk = Number(k.risk_score || 0);
+            document.getElementById('riskFill').style.width = `${risk}%`;
+            document.getElementById('riskText').innerText = `Risk score: ${risk}/100 | Unpaid orders: ${k.unpaid_orders || 0} | Low stock: ${k.low_stock_count || 0}`;
+
+            const salesLines = (d.top_clients || []).map((c, i) => `${i + 1}. ${c.company} | Revenue ${money(c.revenue)}`);
+            const supplierLines = (d.supplier_rows || []).map(s => `${s.company} | ${s.status} | Engagement ${s.engagement}`);
+            const suspicious = ((d.fraud_signals || {}).suspicious_credit_notes || []).map(c => `${c.reference} | ${money(c.amount)} | ${c.reason}`);
+            const fraudMeta = d.fraud_signals || {};
+            const fraudLines = [
+                `Pending RMAs: ${fraudMeta.pending_rma || 0}`,
+                `Blocked clients: ${fraudMeta.blocked_clients || 0}`,
+                `Blocked suppliers: ${fraudMeta.blocked_suppliers || 0}`,
+                ...suspicious
+            ];
+
+            paintBoard('salesBoard', salesLines);
+            paintBoard('supplierBoard', supplierLines);
+            paintBoard('fraudBoard', fraudLines);
+
+            if (typeof showToast === 'function') showToast('Command Center loaded.', 'success');
+        });
+    });
+
+    document.getElementById('quickHighUnpaidBtn').addEventListener('click', function(){
+        apiPost('/api/admin/copilot/query', { prompt: 'show high value unpaid' }).then(d => {
+            if (d.error) {
+                if (typeof showToast === 'function') showToast(d.error, 'error'); else alert(d.error);
+                return;
+            }
+            document.getElementById('copilotReply').innerText = d.reply || 'No results.';
+        });
+    });
+
+    document.getElementById('quickStockoutBtn').addEventListener('click', function(){
+        apiPost('/api/admin/copilot/query', { prompt: 'show stockout risks' }).then(d => {
+            if (d.error) {
+                if (typeof showToast === 'function') showToast(d.error, 'error'); else alert(d.error);
+                return;
+            }
+            document.getElementById('copilotReply').innerText = d.reply || 'No results.';
+        });
+    });
+
+    document.getElementById('copilotForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        apiPost('/api/admin/copilot/query', { prompt: document.getElementById('copilotPrompt').value }).then(d => {
+            if (d.error) {
+                if (typeof showToast === 'function') showToast(d.error, 'error'); else alert(d.error);
+                return;
+            }
+            document.getElementById('copilotReply').innerText = d.reply || 'No response.';
+        });
+    });
+
+    document.getElementById('roleForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        apiPost('/api/admin/role/assign', {
+            username: document.getElementById('roleUsername').value,
+            role: document.getElementById('roleValue').value
+        }).then(d => toastOrAlert(d));
+    });
+
+    document.querySelectorAll('.role-delete-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            const username = this.dataset.username;
+            if (!confirm(`Delete role assignment for ${username}?`)) return;
+            apiPost('/api/admin/role/delete', { username }).then(d => toastOrAlert(d));
+        });
+    });
+
+    document.getElementById('createAdminForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        apiPost('/api/admin/user/create', {
+            username: document.getElementById('newAdminUsername').value,
+            password: document.getElementById('newAdminPassword').value,
+            role: document.getElementById('newAdminRole').value
+        }).then(d => toastOrAlert(d));
+    });
+
+    document.getElementById('workflowForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        apiPost(`/api/admin/workflow/update/${document.getElementById('wfOrder').value}`, {
+            status: document.getElementById('wfStatus').value,
+            note: document.getElementById('wfNote').value
+        }).then(d => toastOrAlert(d));
+    });
+
+    document.getElementById('creditForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        apiPost('/api/admin/credit_control/set', {
+            client_email: document.getElementById('ccEmail').value,
+            credit_limit: document.getElementById('ccLimit').value,
+            outstanding_balance: document.getElementById('ccOutstanding').value,
+            is_active: true
+        }).then(d => toastOrAlert(d));
+    });
+
+    document.getElementById('returnCreateForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        apiPost('/api/admin/returns/create', {
+            inquiry_id: document.getElementById('rrOrder').value,
+            requested_amount: document.getElementById('rrAmount').value,
+            reason: document.getElementById('rrReason').value
+        }).then(d => toastOrAlert(d));
+    });
+
+    document.getElementById('returnResolveForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        apiPost(`/api/admin/returns/${document.getElementById('rrId').value}/resolve`, {
+            decision: document.getElementById('rrDecision').value,
+            approved_amount: document.getElementById('rrApproved').value || 0
+        }).then(d => toastOrAlert(d));
+    });
+
+    document.getElementById('templateForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        apiPost('/api/admin/notification_template/upsert', {
+            name: document.getElementById('tplName').value,
+            channel: document.getElementById('tplChannel').value,
+            subject: document.getElementById('tplSubject').value,
+            body: document.getElementById('tplBody').value,
+            is_active: true
+        }).then(d => toastOrAlert(d));
+    });
+
+    document.getElementById('policyForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        apiPost('/api/admin/inventory_policy/upsert', {
+            product_id: document.getElementById('policyProduct').value,
+            reorder_point: document.getElementById('policyPoint').value,
+            reorder_qty: document.getElementById('policyQty').value,
+            lead_time_days: document.getElementById('policyLead').value
+        }).then(d => toastOrAlert(d));
+    });
+
+    document.getElementById('loadReorderBtn').addEventListener('click', function(){
+        fetch('/api/admin/reorder_suggestions').then(r => r.json()).then(d => {
+            if (d.error) {
+                if (typeof showToast === 'function') showToast(d.error, 'error'); else alert(d.error);
+                return;
+            }
+            const lines = (d.suggestions || []).slice(0, 10).map(s => `${s.name} (${s.sku}) | Stock ${s.stock} <= RP ${s.reorder_point} | Suggest ${s.suggested_qty}`);
+            document.getElementById('reorderResult').innerText = lines.length ? lines.join('\n') : 'No reorder alerts right now.';
+        });
+    });
+
+    document.getElementById('dispatchCreateForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        apiPost('/api/admin/dispatch/create', {
+            inquiry_id: document.getElementById('dpOrder').value,
+            driver_name: document.getElementById('dpDriver').value,
+            vehicle_plate: document.getElementById('dpPlate').value,
+            route: document.getElementById('dpRoute').value
+        }).then(d => toastOrAlert(d));
+    });
+
+    document.getElementById('dispatchStatusForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        apiPost(`/api/admin/dispatch/${document.getElementById('dpId').value}/status`, {
+            status: document.getElementById('dpStatus').value
+        }).then(d => toastOrAlert(d));
+    });
+
+    document.getElementById('loadAnalyticsBtn').addEventListener('click', function(){
+        fetch('/api/admin/analytics/overview').then(r => r.json()).then(d => {
+            if (d.error) {
+                if (typeof showToast === 'function') showToast(d.error, 'error'); else alert(d.error);
+                return;
+            }
+            document.getElementById('analyticsResult').innerText =
+                `Income: KES ${Number(d.income).toLocaleString()}\n` +
+                `Expense: KES ${Number(d.expense).toLocaleString()}\n` +
+                `Net: KES ${Number(d.net).toLocaleString()}\n` +
+                `Credit Note Total: KES ${Number(d.credit_note_total).toLocaleString()}\n` +
+                `Credit Note Ratio: ${(Number(d.credit_note_ratio) * 100).toFixed(2)}%\n` +
+                `Low Stock Count: ${d.low_stock_count}\n` +
+                `Orders Delivered: ${d.orders_delivered}/${d.orders_total}`;
+        });
+    });
+</script>
+{% endblock %}

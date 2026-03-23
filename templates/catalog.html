@@ -38,7 +38,7 @@
 
     /* The Floating Cart Widget */
     .floating-cart {
-        position: fixed; bottom: 30px; right: 30px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px);
+        position: fixed; bottom: 100px; right: 30px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px);
         border: 1px solid var(--accent-color); border-radius: 50px; padding: 15px 25px;
         display: flex; align-items: center; gap: 15px; cursor: pointer; z-index: 999;
         box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(56, 189, 248, 0.2);
@@ -52,6 +52,143 @@
     .cart-details span.c-count { color: #94a3b8; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
     .cart-details span.c-total { color: #fff; font-size: 1.2rem; font-weight: 900; }
     .cart-arrow { color: var(--accent-color); font-size: 1.5rem; font-weight: bold; margin-left: 10px; }
+
+    /* --- MOBILE OPTIMIZATIONS --- */
+    @media (max-width: 768px) {
+        .catalog-wrapper {
+            padding: 1.5rem 0.75rem;
+        }
+
+        .catalog-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            padding: 0 0.5rem;
+        }
+
+        .search-box {
+            margin: 1.5rem 0;
+            padding: 0 0.5rem;
+        }
+
+        .search-input {
+            padding: 14px 18px;
+            font-size: 16px; /* Prevent iOS zoom */
+            border-radius: 12px;
+        }
+
+        .filter-container {
+            gap: 8px;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+        }
+
+        .filter-btn {
+            padding: 10px 16px;
+            font-size: 0.85rem;
+            min-height: 40px;
+        }
+
+        /* Product grid - single column on mobile */
+        .product-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            padding-bottom: 10rem;
+        }
+
+        .product-card {
+            padding: 1.5rem;
+            border-radius: 16px;
+        }
+
+        .product-name {
+            font-size: 1.15rem;
+        }
+
+        .price-value {
+            font-size: 1.5rem;
+        }
+
+        /* Cart controls mobile */
+        .cart-controls {
+            flex-direction: row;
+            gap: 8px;
+        }
+
+        .qty-input {
+            width: 70px;
+            padding: 10px;
+            font-size: 16px; /* Prevent iOS zoom */
+        }
+
+        .btn-cart-add {
+            flex: 1;
+            padding: 14px 10px;
+            font-size: 0.85rem;
+            min-height: 44px;
+        }
+
+        /* Floating cart mobile */
+        .floating-cart {
+            bottom: 70px;
+            right: 12px;
+            left: 12px;
+            border-radius: 16px;
+            padding: 12px 16px;
+            gap: 12px;
+        }
+
+        .cart-icon {
+            font-size: 1.5rem;
+        }
+
+        .cart-details span.c-count {
+            font-size: 0.75rem;
+        }
+
+        .cart-details span.c-total {
+            font-size: 1rem;
+        }
+
+        .cart-arrow {
+            font-size: 1.2rem;
+            margin-left: 5px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .catalog-wrapper {
+            padding: 1rem 0.5rem;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+        }
+
+        .product-card {
+            padding: 1.25rem;
+        }
+
+        .filter-container {
+            justify-content: flex-start;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            flex-wrap: nowrap;
+            padding-bottom: 5px;
+        }
+
+        .filter-btn {
+            flex-shrink: 0;
+        }
+    }
 </style>
 
 <div class="catalog-wrapper" data-aos="fade-in">
@@ -78,7 +215,11 @@
 
             <div class="cart-controls">
                 <input type="number" id="qty-{{ prod.id }}" class="qty-input" value="1" min="1" max="{{ prod.stock_quantity }}">
-                <button class="btn-cart-add" onclick="addToCart('{{ prod.id }}', '{{ prod.name|replace("'", "\\'") }}', {{ prod.unit_cost }})">Add To Cart</button>
+                <button class="btn-cart-add"
+                        data-id="{{ prod.id }}"
+                        data-name="{{ prod.name|e }}"
+                        data-price="{{ prod.unit_cost }}"
+                        onclick="addToCart(this.dataset.id, this.dataset.name, parseFloat(this.dataset.price))">Add To Cart</button>
             </div>
         </div>
         {% endfor %}
@@ -99,7 +240,13 @@
 
 <script>
     // --- CART ENGINE ---
-    let cart = JSON.parse(localStorage.getItem('grandmark_cart')) || {};
+    let cart = {};
+    try {
+        cart = JSON.parse(localStorage.getItem('grandmark_cart')) || {};
+        if (Array.isArray(cart)) cart = {}; // discard incompatible array format
+    } catch(e) {
+        cart = {};
+    }
 
     function updateCartUI() {
         const cartWidget = document.getElementById('floatingCart');

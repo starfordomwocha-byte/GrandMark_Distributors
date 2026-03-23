@@ -5,7 +5,7 @@
 <style>
     .hero-section {
         text-align: center;
-        padding: 7rem 1rem 4rem 1rem;
+        padding: 4.9rem 1rem 4rem 1rem;
         max-width: 1000px;
         margin: 0 auto;
     }
@@ -27,12 +27,82 @@
     }
 
     .hero-title {
-        font-size: 4.5rem;
+        font-size: clamp(2.3rem, 6.2vw, 4.35rem);
         font-weight: 900;
-        line-height: 1.1;
-        margin-bottom: 1.5rem;
-        letter-spacing: -2px;
+        line-height: 1.05;
+        margin-bottom: 1.15rem;
+        letter-spacing: -1.35px;
         color: var(--text-color);
+    }
+
+    .brand-banner {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0.95rem 1rem;
+        margin-top: 1.1rem;
+        margin-bottom: 0.8rem;
+        background: transparent;
+        border-top: 1px solid rgba(148, 163, 184, 0.28);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .brand-banner-title {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 11px;
+        font-size: clamp(1.5rem, 2.8vw, 2.35rem);
+        font-weight: 800;
+        font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+        letter-spacing: 0.65px;
+        text-transform: uppercase;
+        color: #f1f5f9;
+        margin: 0;
+        padding: 0.2rem 0.5rem;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        line-height: 1;
+    }
+
+    .brand-banner-title img {
+        width: 42px;
+        height: 42px;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.35));
+    }
+
+    @media (max-width: 1200px) {
+        .brand-banner-title {
+            letter-spacing: 0.8px;
+        }
+
+        .brand-banner-title img {
+            width: 50px;
+            height: 50px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .brand-banner {
+            margin-top: 1rem;
+            padding: 0.75rem 0.75rem;
+        }
+
+        .brand-banner-title {
+            font-size: 1.1rem;
+            letter-spacing: 0.4px;
+            padding: 0.2rem 0.3rem;
+            gap: 8px;
+        }
+
+        .brand-banner-title img {
+            width: 26px;
+            height: 26px;
+        }
     }
 
     .hero-title span {
@@ -44,11 +114,42 @@
     .hero-subtitle {
         font-size: 1.25rem;
         color: #94a3b8;
-        margin-bottom: 3rem;
-        line-height: 1.6;
-        max-width: 750px;
+        margin-bottom: 2.65rem;
+        line-height: 1.68;
+        max-width: 780px;
         margin-left: auto;
         margin-right: auto;
+    }
+
+    .hero-actions {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1.1rem;
+        flex-wrap: wrap;
+        margin-top: 0.35rem;
+    }
+
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 3.5rem 1rem 3.1rem 1rem;
+        }
+
+        .hero-title {
+            margin-bottom: 0.9rem;
+            letter-spacing: -0.7px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.03rem;
+            margin-bottom: 2rem;
+            line-height: 1.62;
+        }
+
+        .hero-actions {
+            gap: 0.8rem;
+            margin-top: 0;
+        }
     }
 
     .btn-primary {
@@ -86,8 +187,26 @@
     /* --- THE REFINED EXPANDING GRID --- */
     .features-section {
         max-width: 1200px;
-        margin: 4rem auto;
+        margin: 3.2rem auto 4rem auto;
         padding: 0 2rem;
+    }
+
+    .features-intro {
+        text-align: center;
+        margin-bottom: 3.2rem;
+    }
+
+    .features-intro h2 {
+        font-size: clamp(2rem, 4.2vw, 2.65rem);
+        font-weight: 900;
+        color: var(--text-color);
+        margin-bottom: 0.7rem;
+        letter-spacing: -0.5px;
+    }
+
+    .features-intro p {
+        color: #94a3b8;
+        font-size: 1.06rem;
     }
 
     .features-grid {
@@ -108,7 +227,6 @@
         cursor: default;
     }
 
-    /* 1. The Enlarging Animation */
     .feature-card:hover {
         transform: translateY(-8px) scale(1.02);
         border-color: rgba(56, 189, 248, 0.5);
@@ -136,7 +254,6 @@
     .feature-card h3 { font-size: 1.4rem; font-weight: 800; color: var(--text-color); margin: 0 0 10px 0; }
     .feature-card p.base-text { color: #94a3b8; font-size: 1.05rem; line-height: 1.6; margin: 0; }
 
-    /* 2. The Smooth "Extra Details" Reveal */
     .extra-details {
         max-height: 0;
         opacity: 0;
@@ -145,35 +262,17 @@
     }
 
     .feature-card:hover .extra-details {
-        max-height: 250px; /* Expands to fit content */
+        max-height: 250px; 
         opacity: 1;
         margin-top: 20px;
         padding-top: 20px;
         border-top: 1px dashed rgba(255,255,255,0.1);
     }
 
-    .detail-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
+    .detail-list { list-style: none; padding: 0; margin: 0; }
+    .detail-list li { color: #cbd5e1; font-size: 0.95rem; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px; }
+    .detail-list li::before { content: '→'; color: var(--accent-color); font-weight: bold; }
 
-    .detail-list li {
-        color: #cbd5e1;
-        font-size: 0.95rem;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .detail-list li::before {
-        content: '→';
-        color: var(--accent-color);
-        font-weight: bold;
-    }
-
-    /* Stats Strip */
     .stats-strip {
         display: flex; justify-content: space-around; flex-wrap: wrap;
         border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
@@ -181,24 +280,259 @@
     }
     .stat-item { text-align: center; padding: 1rem 2rem; }
     .stat-num { font-size: 3rem; font-weight: 900; color: var(--accent-color); font-family: 'Plus Jakarta Sans', sans-serif; }
+    .stat-suffix { font-size: 2rem; color: var(--accent-color); font-weight: 900; }
     .stat-lbl { font-size: 0.9rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+
+    .bottom-cta {
+        text-align: center;
+        margin: 6rem 0 5rem 0;
+    }
+
+    .bottom-cta-title {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 900;
+        margin-bottom: 1.2rem;
+        color: var(--text-color);
+        letter-spacing: -0.4px;
+    }
+
+    .bottom-cta-subtitle {
+        color: #94a3b8;
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .bottom-cta .btn-primary {
+        display: inline-block;
+        padding: 18px 50px;
+        font-size: 1.1rem;
+        margin-top: 1.2rem;
+    }
+
+    /* --- ENHANCED MOBILE RESPONSIVENESS --- */
+    @media (max-width: 768px) {
+        /* Hero section mobile */
+        .hero-section {
+            padding: 2.5rem 0.75rem 2rem 0.75rem;
+        }
+
+        .hero-badge {
+            font-size: 0.75rem;
+            padding: 5px 14px;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title {
+            font-size: clamp(1.75rem, 7vw, 2.5rem);
+            margin-bottom: 1rem;
+            line-height: 1.15;
+        }
+
+        .hero-subtitle {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+        }
+
+        .hero-actions {
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            padding: 0 0.5rem;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 1rem;
+            text-align: center;
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Brand banner mobile */
+        .brand-banner {
+            padding: 0.85rem 0.75rem;
+            margin-top: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand-banner-title {
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            gap: 10px;
+        }
+
+        .brand-banner-title img {
+            width: 36px;
+            height: 36px;
+        }
+
+        /* Features section mobile */
+        .features-section {
+            margin: 1.5rem auto 2.5rem auto;
+            padding: 0 0.75rem;
+        }
+
+        .features-intro {
+            margin-bottom: 1.75rem;
+        }
+
+        .features-intro h2 {
+            font-size: clamp(1.5rem, 5vw, 2rem);
+        }
+
+        .features-intro p {
+            font-size: 0.95rem;
+            padding: 0 0.5rem;
+        }
+
+        /* Features grid mobile - single column */
+        .features-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            padding: 1.75rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+        }
+
+        .feature-card p.base-text {
+            font-size: 1rem;
+        }
+
+        /* Show extra details by default on mobile (no hover) */
+        .feature-card .extra-details {
+            max-height: initial;
+            opacity: 1;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed rgba(255,255,255,0.1);
+        }
+
+        .detail-list li {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        /* Stats strip mobile */
+        .stats-strip {
+            flex-direction: column;
+            margin: 2.5rem 0;
+            padding: 2rem 0;
+            gap: 1.5rem;
+        }
+
+        .stat-item {
+            padding: 0.75rem;
+        }
+
+        .stat-num {
+            font-size: 2.5rem;
+        }
+
+        .stat-suffix {
+            font-size: 1.5rem;
+        }
+
+        .stat-lbl {
+            font-size: 0.85rem;
+        }
+
+        /* Bottom CTA mobile */
+        .bottom-cta {
+            margin: 3rem 0 2rem 0;
+            padding: 0 0.75rem;
+        }
+
+        .bottom-cta-title {
+            font-size: clamp(1.5rem, 6vw, 2.25rem);
+            margin-bottom: 1rem;
+        }
+
+        .bottom-cta-subtitle {
+            font-size: 0.95rem;
+            padding: 0 0.5rem;
+        }
+
+        .bottom-cta .btn-primary {
+            width: 100%;
+            max-width: 340px;
+            padding: 16px 24px;
+            font-size: 1rem;
+            min-height: 52px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .hero-section {
+            padding: 2rem 0.5rem 1.5rem 0.5rem;
+        }
+
+        .hero-title {
+            font-size: 1.6rem;
+        }
+
+        .brand-banner-title {
+            font-size: 1rem;
+            gap: 8px;
+        }
+
+        .brand-banner-title img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .features-section {
+            padding: 0 0.5rem;
+        }
+
+        .feature-card {
+            padding: 1.5rem;
+        }
+
+        .stat-num {
+            font-size: 2rem;
+        }
+
+        .stat-suffix {
+            font-size: 1.25rem;
+        }
+
+        .bottom-cta {
+            padding: 0 0.5rem;
+        }
+    }
+
 
 </style>
 
+<div class="brand-banner" data-aos="fade-down" data-aos-duration="900">
+    <p class="brand-banner-title"><img src="{{ url_for('static', filename='logo.png') }}" alt="GrandMark Logo">GrandMark Distributors</p>
+</div>
+
 <div class="hero-section" data-aos="zoom-in" data-aos-duration="1000">
-    <h1 class="hero-title">GRANDMARK DISTRIBUTORS LIMITED <span>Modern Supply Chain.</span></h1>
-    <p class="hero-subtitle">GrandMark Distributors provides Africa's fastest-growing enterprises with the dynamic backend required for global commerce. Fully secured. Absolute precision.</p>
+    <h1 class="hero-title">Bridging Global Supply <span>with Local Demand.</span></h1>
+    <p class="hero-subtitle">GrandMark Distributors is Kenya's premier wholesale network. We source the highest quality FMCG, electronics, and construction materials from trusted local Kenyan manufacturers and international partners, delivering them directly to your retail business with our dedicated in-house logistics fleet.</p>
     
-    <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; margin-top: 2rem;">
+    <div class="hero-actions">
         <a href="/catalog" class="btn-primary">View Live Inventory</a>
         <a href="/client_portal" class="btn-secondary">Client Gateway</a>
     </div>
 </div>
 
 <div class="features-section">
-    <div style="text-align: center; margin-bottom: 4rem;">
-        <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--text-color); margin-bottom: 10px;">Engineered for Total Control.</h2>
-        <p style="color: #94a3b8; font-size: 1.1rem;">Hover over any module to view technical capabilities.</p>
+    <div class="features-intro">
+        <h2>Engineered for Total Control.</h2>
+        <p>Hover over any module to view technical capabilities.</p>
     </div>
 
     <div class="features-grid">
@@ -291,23 +625,23 @@
 
 <div class="stats-strip">
     <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
-        <div class="stat-num counter" data-target="99">0</div><span style="font-size: 2rem; color: var(--accent-color); font-weight: 900;">.9%</span>
+        <div class="stat-num counter" data-target="99">0</div><span class="stat-suffix">.9%</span>
         <div class="stat-lbl">System Uptime</div>
     </div>
     <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
-        <div class="stat-num counter" data-target="50">0</div><span style="font-size: 2rem; color: var(--accent-color); font-weight: 900;">ms</span>
+        <div class="stat-num counter" data-target="50">0</div><span class="stat-suffix">ms</span>
         <div class="stat-lbl">Ledger Sync Speed</div>
     </div>
     <div class="stat-item" data-aos="fade-up" data-aos-delay="300">
-        <div class="stat-num counter" data-target="256">0</div><span style="font-size: 2rem; color: var(--accent-color); font-weight: 900;">-bit</span>
+        <div class="stat-num counter" data-target="256">0</div><span class="stat-suffix">-bit</span>
         <div class="stat-lbl">SHA-256 Encryption</div>
     </div>
 </div>
 
-<div style="text-align: center; margin: 6rem 0 5rem 0;" data-aos="fade-up">
-    <h2 style="font-size: 3rem; font-weight: 900; margin-bottom: 1.5rem; color: var(--text-color);">Ready to scale your supply chain?</h2>
-    <p style="color: #94a3b8; margin-bottom: 3rem; font-size: 1.15rem; max-width: 600px; margin: 0 auto;">Join the growing network of suppliers and retail clients relying on the GrandMark logistics OS.</p>
-    <a href="/supplier_portal" class="btn-primary" style="display: inline-block; padding: 18px 50px; font-size: 1.1rem; margin-top: 1rem;">Access Supplier Portal</a>
+<div class="bottom-cta" data-aos="fade-up">
+    <h2 class="bottom-cta-title">Ready to scale your retail supply?</h2>
+    <p class="bottom-cta-subtitle">Join the growing network of suppliers and retail clients relying on the GrandMark logistics OS.</p>
+    <a href="/supplier_portal" class="btn-primary">Access Supplier Portal</a>
 </div>
 
 <script>

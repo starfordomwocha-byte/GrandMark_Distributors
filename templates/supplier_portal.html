@@ -50,7 +50,7 @@
                 <div class="form-group"><input type="text" id="regCompany" class="form-control" placeholder="Manufacturing Company Name" required></div>
                 <div class="form-group"><input type="email" id="regEmail" class="form-control" placeholder="Corporate Email Address" required></div>
                 <div class="form-group"><input type="password" id="regPass" class="form-control" placeholder="Create Secure Password" required></div>
-                <button type="submit" class="btn-submit">Register & Send OTP</button>
+                <button type="submit" class="btn-submit">Create Account</button>
             </form>
             <span class="toggle-link" onclick="switchView('viewLogin')">Already an authorized supplier? Login</span>
         </div>
@@ -81,7 +81,7 @@
     document.getElementById('formRegister').addEventListener('submit', function(e) {
         e.preventDefault();
         const btn = this.querySelector('button');
-        btn.innerText = "Dispatching Security Code...";
+        btn.innerText = "Creating Account...";
 
         registeredEmail = document.getElementById('regEmail').value;
 
@@ -97,7 +97,8 @@
         })
         .then(res => res.json())
         .then(data => {
-            if(data.error) { alert(data.error); btn.innerText = "Register & Send OTP"; } 
+            if(data.error) { showToast(data.error, 'error'); btn.innerText = "Create Account"; }
+            else if (data.status === "success") { showToast("Account created! You can now log in.", 'success'); btn.innerText = "Create Account"; switchView('viewLogin'); }
             else if (data.status === "pending_verification") { switchView('viewOTP'); }
         });
     });
@@ -119,8 +120,8 @@
         })
         .then(res => res.json())
         .then(data => {
-            if(data.error) { alert(data.error); btn.innerText = "Verify Identity"; } 
-            else { alert("Success! Your node is active. Please log in."); switchView('viewLogin'); }
+            if(data.error) { showToast(data.error, 'error'); btn.innerText = "Verify Identity"; }
+            else { showToast("Your node is active. Please log in.", 'success'); switchView('viewLogin'); }
         });
     });
 
@@ -138,7 +139,7 @@
         })
         .then(res => res.json())
         .then(data => {
-            if(data.error) { alert(data.error); } 
+            if(data.error) { showToast(data.error, 'error'); }
             else { window.location.href = '/supplier_portal'; } // Reloads to show dashboard!
         });
     });

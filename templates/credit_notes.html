@@ -1,0 +1,436 @@
+{% extends "base.html" %}
+{% block title %}Credit Notes Hub | GrandMark{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .hub-wrapper { max-width: 1350px; margin: 2rem auto 6rem auto; padding: 0 2rem; }
+    .hub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+    .hub-header h1 { font-size: 2.2rem; margin: 0; color: #fff; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 1.4rem; }
+    .stat-label { color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+    .stat-value { color: #fff; font-size: 1.8rem; font-weight: 900; margin-top: 8px; }
+
+    .panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 18px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .panel h2 { margin: 0 0 1rem 0; color: #fff; font-size: 1.2rem; }
+
+    .admin-form { display: flex; gap: 10px; flex-wrap: wrap; }
+    .admin-input { flex: 1; min-width: 170px; padding: 11px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #fff; }
+    .btn-submit { background: var(--accent-color); border: none; color: #000; border-radius: 8px; padding: 10px 14px; font-weight: 800; cursor: pointer; }
+    .btn-export { background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color); border-radius: 8px; padding: 8px 10px; text-decoration: none; font-size: 0.8rem; }
+
+    .table-container { overflow-x: auto; }
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th { text-align: left; color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; background: rgba(0,0,0,0.35); padding: 10px 12px; }
+    .admin-table td { color: #d1d5db; border-bottom: 1px solid rgba(255,255,255,0.07); padding: 10px 12px; }
+
+    .chart-wrap { height: 300px; margin-top: 1rem; }
+
+    @media (max-width: 900px) {
+        .hub-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    }
+</style>
+
+<div class="hub-wrapper" data-aos="fade-in">
+    <div class="hub-header">
+        <h1>Credit Notes Hub</h1>
+        <div>
+            <a href="/logout" class="btn-export" style="margin-right: 8px; color:#f87171; border-color:#f87171;">Logout</a>
+            <a href="/admin" class="btn-export" style="margin-right: 8px;">Back to Console</a>
+            <span class="btn-export" style="margin-right: 8px; border-color:#34d399; color:#34d399;">Role: {{ admin_role }}</span>
+            {% if ui_permissions.reports or ui_permissions.finance %}
+            <a href="/admin/credit_notes/export.csv{% if export_query %}?{{ export_query }}{% endif %}" class="btn-export" style="margin-right: 8px;">Export Filtered CSV</a>
+            <a href="/admin/credit_notes/export.pdf{% if export_query %}?{{ export_query }}{% endif %}" class="btn-export">Export Filtered PDF</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Matching Credit Notes</div>
+            <div class="stat-value">{{ total_count }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Credited (Filtered)</div>
+            <div class="stat-value" style="color:#f87171;">KES {{ "{:,.2f}".format(total_credited) }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Credited (This Month)</div>
+            <div class="stat-value" style="color:#f59e0b;">KES {{ "{:,.2f}".format(month_total) }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Pending Bank Verifications</div>
+            <div class="stat-value" style="color:#38bdf8;">{{ pending_bank_verifications }}</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Filter Credit Notes</h2>
+        <form id="creditFilterForm" method="GET" action="/admin/credit_notes" class="admin-form">
+            <input type="hidden" name="range" id="rangeKey" value="{{ filters.range }}">
+            <input class="admin-input" name="reference" value="{{ filters.reference }}" placeholder="Reference (CN-...)">
+            <input class="admin-input" name="company" value="{{ filters.company }}" placeholder="Company name contains...">
+            <input class="admin-input" type="date" name="from_date" value="{{ filters.from_date }}">
+            <input class="admin-input" type="date" name="to_date" value="{{ filters.to_date }}">
+            <button type="submit" class="btn-submit">Apply Filters</button>
+        </form>
+        <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+            <button type="button" class="btn-export" onclick="applyRange('7d')">Last 7 Days</button>
+            <button type="button" class="btn-export" onclick="applyRange('30d')">Last 30 Days</button>
+            <button type="button" class="btn-export" onclick="applyRange('ytd')">Year To Date</button>
+            <button type="button" class="btn-export" onclick="applyRange('')">Clear Preset</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Issue Credit Note</h2>
+        {% if ui_permissions.finance or ui_permissions.support %}
+        <form id="quickCreditForm" class="admin-form">
+            <input id="issueOrderId" class="admin-input" type="number" min="1" placeholder="Order ID (e.g., 42)" required>
+            <input id="issueAmount" class="admin-input" type="number" min="0.01" step="0.01" placeholder="Amount (KES)" required>
+            <input id="issueReason" class="admin-input" placeholder="Reason" required>
+            <label style="display:flex; align-items:center; gap:8px; color:#cbd5e1; font-size:0.9rem;">
+                <input id="issueRestock" type="checkbox"> Restock inventory
+            </label>
+            <button type="submit" class="btn-submit">Issue Credit</button>
+        </form>
+        {% else %}
+        <p style="color:#94a3b8;">Finance or Support permission required to issue credit notes.</p>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <h2>Credit Trend by Date</h2>
+        <div id="creditTrendData"
+             data-labels='{{ chart_labels | tojson | forceescape }}'
+             data-values='{{ chart_values | tojson | forceescape }}'></div>
+        <div class="chart-wrap">
+            <canvas id="creditTrendChart"></canvas>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Payment Method Analytics</h2>
+        <div id="paymentMethodData"
+             data-labels='{{ method_labels | tojson | forceescape }}'
+             data-values='{{ method_values | tojson | forceescape }}'
+             data-counts='{{ method_count_values | tojson | forceescape }}'></div>
+        <div class="chart-wrap">
+            <canvas id="paymentMethodChart"></canvas>
+        </div>
+        <p style="color:#94a3b8; margin-top:10px; font-size:0.85rem;">Shows paid-order value split by payment method.</p>
+    </div>
+
+    <div class="panel">
+        <h2>Bank Transfer Verification</h2>
+        {% if ui_permissions.finance %}
+        <form id="bankVerifyForm" class="admin-form">
+            <input id="bankVerifyOrderId" class="admin-input" type="number" min="1" placeholder="Order ID (GMK-00...)" required>
+            <select id="bankVerifyDecision" class="admin-input" style="max-width:220px;">
+                <option value="approve">Approve</option>
+                <option value="reject">Reject</option>
+            </select>
+            <input id="bankVerifyNote" class="admin-input" placeholder="Optional note to customer...">
+            <button type="submit" class="btn-submit">Submit Verification</button>
+        </form>
+        {% else %}
+        <p style="color:#94a3b8;">Finance permission required.</p>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <h2>Credit Note Register</h2>
+        <div class="table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Order</th>
+                        <th>Client</th>
+                        <th style="text-align:right;">Amount</th>
+                        <th>Reason</th>
+                        <th>Issued</th>
+                        <th>PDF</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cn in credit_notes %}
+                    <tr>
+                        <td style="font-family: monospace; color:#f59e0b; font-weight:700;">{{ cn.reference }}</td>
+                        <td>GMK-00{{ cn.inquiry_id }}</td>
+                        <td>{{ cn.company_name }}<br><span style="font-size:0.8rem; color:#94a3b8;">{{ cn.contact_email }}</span></td>
+                        <td style="text-align:right; color:#f87171; font-family: monospace;">{{ "{:,.2f}".format(cn.amount) }}</td>
+                        <td>{{ cn.reason }}{% if cn.restock_inventory %}<br><span style="font-size:0.78rem; color:#34d399;">Restocked</span>{% endif %}</td>
+                        <td style="font-family: monospace; color:#94a3b8;">{{ cn.created_at.strftime('%Y-%m-%d %H:%M') }}<br>{{ cn.issued_by }}</td>
+                        <td><a class="btn-export" href="/api/credit_note/{{ cn.id }}/pdf">PDF</a></td>
+                        <td>
+                            <div style="font-size:0.78rem; color:#94a3b8; margin-bottom:6px;">
+                                Status: <span style="color: {% if cn.email_status == 'sent' %}#34d399{% elif cn.email_status == 'failed' %}#f87171{% else %}#94a3b8{% endif %}; font-weight:700;">{{ cn.email_status | upper }}</span><br>
+                                Attempts: {{ cn.email_attempts }}
+                                {% if cn.email_last_sent_at %}<br>Last: {{ cn.email_last_sent_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}
+                                {% if cn.email_last_message %}<br><span style="color:#64748b;">{{ cn.email_last_message[:42] }}{% if cn.email_last_message|length > 42 %}...{% endif %}</span>{% endif %}
+                            </div>
+                            {% if ui_permissions.finance %}<button class="btn-export" style="cursor:pointer;" onclick="resendCreditNoteEmail({{ cn.id }}, '{{ cn.reference }}', this)">Resend</button>{% else %}<span style="font-size:0.8rem; color:#64748b;">No Access</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" style="text-align:center; color:#94a3b8;">No credit notes match your filters.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function applyRange(rangeValue) {
+        const form = document.getElementById('creditFilterForm');
+        const rangeInput = document.getElementById('rangeKey');
+        rangeInput.value = rangeValue;
+
+        if (rangeValue) {
+            const fromInput = form.querySelector('input[name="from_date"]');
+            const toInput = form.querySelector('input[name="to_date"]');
+            fromInput.value = '';
+            toInput.value = '';
+        }
+        form.submit();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('creditFilterForm');
+        const fromInput = form.querySelector('input[name="from_date"]');
+        const toInput = form.querySelector('input[name="to_date"]');
+        const rangeInput = document.getElementById('rangeKey');
+
+        [fromInput, toInput].forEach(function(el) {
+            el.addEventListener('change', function() {
+                if (fromInput.value || toInput.value) {
+                    rangeInput.value = '';
+                }
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const chartDataElement = document.getElementById('creditTrendData');
+        const labels = JSON.parse(chartDataElement.dataset.labels || '[]');
+        const values = JSON.parse(chartDataElement.dataset.values || '[]');
+        const ctx = document.getElementById('creditTrendChart').getContext('2d');
+
+        if (!labels.length) {
+            return;
+        }
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Credit Notes Total (KES)',
+                    data: values,
+                    borderColor: 'rgba(245, 158, 11, 1)',
+                    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#cbd5e1' } }
+                },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: {
+                        ticks: {
+                            color: '#94a3b8',
+                            callback: function(value) { return 'KES ' + Number(value).toLocaleString(); }
+                        },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    }
+                }
+            }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const chartDataElement = document.getElementById('paymentMethodData');
+        if (!chartDataElement) return;
+
+        const labels = JSON.parse(chartDataElement.dataset.labels || '[]');
+        const values = JSON.parse(chartDataElement.dataset.values || '[]');
+        const counts = JSON.parse(chartDataElement.dataset.counts || '[]');
+        const ctx = document.getElementById('paymentMethodChart').getContext('2d');
+        if (!labels.length) return;
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Value (KES)',
+                        data: values,
+                        backgroundColor: 'rgba(56, 189, 248, 0.55)',
+                        borderColor: 'rgba(56, 189, 248, 1)',
+                        borderWidth: 1.2
+                    },
+                    {
+                        label: 'Orders Count',
+                        data: counts,
+                        type: 'line',
+                        borderColor: 'rgba(245, 158, 11, 1)',
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        yAxisID: 'y1',
+                        tension: 0.28,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#cbd5e1' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: {
+                        ticks: {
+                            color: '#94a3b8',
+                            callback: function(value) { return 'KES ' + Number(value).toLocaleString(); }
+                        },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    y1: {
+                        position: 'right',
+                        ticks: { color: '#f59e0b' },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+    });
+
+    const quickCreditForm = document.getElementById('quickCreditForm');
+    if (quickCreditForm) {
+    quickCreditForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const orderId = parseInt(document.getElementById('issueOrderId').value, 10);
+        const amount = parseFloat(document.getElementById('issueAmount').value);
+        const reason = document.getElementById('issueReason').value.trim();
+        const restock = document.getElementById('issueRestock').checked;
+
+        if (Number.isNaN(orderId) || orderId <= 0) {
+            if (typeof showToast === 'function') showToast('Enter a valid order ID.', 'error');
+            return;
+        }
+        if (Number.isNaN(amount) || amount <= 0) {
+            if (typeof showToast === 'function') showToast('Enter a valid credit amount.', 'error');
+            return;
+        }
+        if (!reason) {
+            if (typeof showToast === 'function') showToast('Reason is required for a credit note.', 'warning');
+            return;
+        }
+
+        if (typeof showToast === 'function') showToast('Submitting credit note...', 'info');
+
+        fetch(`/api/issue_credit_note/${orderId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                amount: amount,
+                reason: reason,
+                restock_inventory: restock
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                if (typeof showToast === 'function') showToast(data.error, 'error'); else alert(data.error);
+                return;
+            }
+            if (typeof showToast === 'function') showToast(data.message, 'success'); else alert(data.message);
+            setTimeout(() => window.location.reload(), 1200);
+        })
+        .catch(() => {
+            if (typeof showToast === 'function') showToast('Failed to issue credit note.', 'error'); else alert('Failed to issue credit note.');
+        });
+    });
+    }
+
+    const bankVerifyForm = document.getElementById('bankVerifyForm');
+    if (bankVerifyForm) {
+        bankVerifyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const orderId = parseInt(document.getElementById('bankVerifyOrderId').value, 10);
+            const decision = document.getElementById('bankVerifyDecision').value;
+            const note = document.getElementById('bankVerifyNote').value.trim();
+
+            if (Number.isNaN(orderId) || orderId <= 0) {
+                if (typeof showToast === 'function') showToast('Enter a valid order ID.', 'error');
+                return;
+            }
+
+            fetch(`/api/admin/payment/bank_transfer/verify/${orderId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ decision, note })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Verification failed.');
+                if (typeof showToast === 'function') showToast(data.message || 'Verification complete.', 'success');
+                setTimeout(() => window.location.reload(), 1200);
+            })
+            .catch(err => {
+                if (typeof showToast === 'function') showToast(err.message || 'Verification failed.', 'error');
+            });
+        });
+    }
+
+    function resendCreditNoteEmail(creditNoteId, reference, btn) {
+        if (!creditNoteId) return;
+
+        const original = btn ? btn.innerText : 'Resend';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = 'Sending...';
+        }
+
+        fetch(`/api/credit_note/${creditNoteId}/resend`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(async res => {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to resend email.');
+            if (typeof showToast === 'function') {
+                showToast(data.message || `Credit note ${reference} email resent.`, 'success');
+            } else {
+                alert(data.message || `Credit note ${reference} email resent.`);
+            }
+        })
+        .catch(err => {
+            if (typeof showToast === 'function') {
+                showToast(err.message || `Failed to resend ${reference}.`, 'error');
+            } else {
+                alert(err.message || `Failed to resend ${reference}.`);
+            }
+        })
+        .finally(() => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = original;
+            }
+        });
+    }
+</script>
+{% endblock %}

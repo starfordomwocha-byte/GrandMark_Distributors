@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Payment Center | GrandMark{% endblock %}
+
+{% block content %}
+<style>
+    .pay-wrap { max-width: 980px; margin: 3rem auto 7rem auto; padding: 0 1.25rem; }
+    .pay-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .pay-head h1 { margin: 0; font-size: 2rem; color: #fff; font-weight: 900; }
+    .back-link {
+        color: #cbd5e1;
+        text-decoration: none;
+        font-weight: 700;
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.04);
+    }
+
+    .hero-card, .method-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 18px;
+        padding: 1.4rem;
+        box-shadow: 0 20px 35px rgba(0,0,0,0.25);
+    }
+
+    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .kv { color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+    .vv { color: #fff; font-size: 1.05rem; font-weight: 800; margin-top: 4px; }
+
+    .total {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(14,165,233,0.22), rgba(34,197,94,0.16));
+        border: 1px solid rgba(56,189,248,0.35);
+    }
+    .total .label { color: #bfdbfe; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+    .total .amount { color: #fff; font-size: 2rem; font-weight: 900; margin-top: 4px; }
+
+    .status-chip {
+        display: inline-block;
+        margin-top: 0.7rem;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        background: rgba(245,158,11,0.12);
+        border: 1px solid rgba(245,158,11,0.35);
+        color: #fcd34d;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+    }
+
+    .methods { margin-top: 1.2rem; display: grid; gap: 0.9rem; }
+    .method-card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .method-meta h3 { margin: 0; color: #fff; }
+    .method-meta p { margin: 0.35rem 0 0 0; color: #cbd5e1; font-size: 0.92rem; }
+
+    .pay-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 11px 14px;
+        font-weight: 800;
+        cursor: pointer;
+        color: #001217;
+        min-width: 180px;
+        transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+    }
+    .pay-btn:hover { transform: translateY(-2px); }
+    .pay-btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+
+    .m-mpesa { background: #22c55e; box-shadow: 0 6px 20px rgba(34,197,94,.35); }
+    .m-card { background: #38bdf8; box-shadow: 0 6px 20px rgba(56,189,248,.35); }
+    .m-wallet { background: #f59e0b; box-shadow: 0 6px 20px rgba(245,158,11,.35); }
+    .m-bank { background: #a78bfa; box-shadow: 0 6px 20px rgba(167,139,250,.35); color: #fff; }
+
+    .note { margin-top: 1rem; color: #94a3b8; font-size: 0.9rem; }
+
+    @media (max-width: 860px) {
+        .hero-grid { grid-template-columns: 1fr; }
+        .method-card { flex-direction: column; align-items: flex-start; }
+        .pay-btn { width: 100%; }
+    }
+</style>
+
+<div class="pay-wrap" data-aos="fade-up">
+    <div class="pay-head">
+        <h1>Client Payment Center</h1>
+        <a href="/client_portal" class="back-link">Back to Dashboard</a>
+    </div>
+
+    <div class="hero-card">
+        <div class="hero-grid">
+            <div>
+                <div class="kv">Order Reference</div>
+                <div class="vv">GMK-00{{ order.id }}</div>
+            </div>
+            <div>
+                <div class="kv">Company</div>
+                <div class="vv">{{ order.company_name }}</div>
+            </div>
+            <div>
+                <div class="kv">Current Status</div>
+                <div class="vv">{{ order.status }}</div>
+            </div>
+            <div>
+                <div class="kv">Submitted</div>
+                <div class="vv">{{ order.date_submitted.strftime('%Y-%m-%d %H:%M') }}</div>
+            </div>
+        </div>
+
+        <div class="total">
+            <div class="label">Amount Due</div>
+            <div class="amount">KES {{ '{:,.2f}'.format(amount_due) }}</div>
+        </div>
+
+        {% if payable %}
+            <span class="status-chip">Ready for Payment</span>
+        {% else %}
+            <span class="status-chip" style="background: rgba(148,163,184,0.16); border-color: rgba(148,163,184,0.35); color:#cbd5e1;">Not Payable Right Now</span>
+        {% endif %}
+    </div>
+
+    <div class="methods">
+        <div class="method-card">
+            <div class="method-meta">
+                <h3>M-PESA STK</h3>
+                <p>Instant settlement via mobile money.</p>
+            </div>
+            <button class="pay-btn m-mpesa" {% if not payable %}disabled{% endif %} onclick="runPayment('mpesa', this)">Pay with M-PESA</button>
+        </div>
+
+        <div class="method-card">
+            <div class="method-meta">
+                <h3>Card Payment</h3>
+                <p>Visa or Mastercard card settlement.</p>
+            </div>
+            <button class="pay-btn m-card" {% if not payable %}disabled{% endif %} onclick="runPayment('card', this)">Pay by Card</button>
+        </div>
+
+        <div class="method-card">
+            <div class="method-meta">
+                <h3>Client Wallet</h3>
+                <p>Deduct from your company wallet balance.</p>
+            </div>
+            <button class="pay-btn m-wallet" {% if not payable %}disabled{% endif %} onclick="runPayment('wallet', this)">Pay from Wallet</button>
+        </div>
+
+        <div class="method-card">
+            <div class="method-meta">
+                <h3>Bank Transfer</h3>
+                <p>Submit transfer and await finance verification.</p>
+            </div>
+            <button class="pay-btn m-bank" {% if not payable %}disabled{% endif %} onclick="runPayment('bank_transfer', this)">Submit Bank Transfer</button>
+        </div>
+    </div>
+
+    <p class="note">For bank transfer, your order status will change to awaiting verification until finance confirms receipt.</p>
+</div>
+
+<script>
+    function setBusy(btn, label) {
+        btn.dataset.originalText = btn.innerText;
+        btn.innerText = label;
+        btn.disabled = true;
+    }
+
+    function resetBusy(btn) {
+        btn.innerText = btn.dataset.originalText || 'Pay';
+        btn.disabled = false;
+    }
+
+    function runPayment(method, btn) {
+        setBusy(btn, 'Processing...');
+
+        fetch('/api/client/payment/{{ order.id }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ method })
+        })
+        .then(async (res) => {
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || 'Payment request failed.');
+            }
+            showToast(data.message || 'Payment completed.', 'success');
+            setTimeout(() => { window.location.href = '/client_portal'; }, 1600);
+        })
+        .catch((err) => {
+            showToast(err.message || 'Payment failed.', 'error');
+            resetBusy(btn);
+        });
+    }
+</script>
+{% endblock %}
